@@ -1,8 +1,14 @@
 <p align="center">
-  <img width="400px" src="https://raw.githubusercontent.com/fernandowashimi/bunchify/main/images/logo.png">
+  <a href="https://bunchify.vercel.app">
+    <img width="400px" src="https://raw.githubusercontent.com/fernandowashimi/bunchify/main/images/logo.png">
+  </a>
 </p>
 
 #
+
+## Demo
+
+[bunchify.vercel.app](https://bunchify.vercel.app)
 
 ## About
 
