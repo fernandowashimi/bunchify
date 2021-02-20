@@ -2,7 +2,7 @@ import { FC, useContext, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/router';
 
-import { Button, Code, Heading, Stack, Text, useToast } from '@chakra-ui/react';
+import { Box, Button, Code, Image, Stack, Text, useToast } from '@chakra-ui/react';
 import { ArrowForwardIcon } from '@chakra-ui/icons';
 
 import { Container } from '@/components/Container';
@@ -65,10 +65,10 @@ const Authorize: FC<AuthorizeProps> = ({ spotifyParams }) => {
         <Loading />
       ) : (
         <>
-          <Stack direction="column" spacing="2rem">
-            <Heading as="h1" size="4xl" textAlign="center">
-              bunchify
-            </Heading>
+          <Stack direction="column" spacing="2rem" alignItems="center">
+            <Box backgroundColor="gray.900" p="15px">
+              <Image src="/Bunchify_Typo.png" htmlWidth="250px" />
+            </Box>
 
             <Text textAlign="center">
               Generate assets based on your <Code>Spotify</Code> data.

@@ -119,7 +119,7 @@ const Index: FC = () => {
                 )}
 
                 <Stack direction="column" flex={1} alignItems="center" spacing="1rem">
-                  <Box w="md">
+                  <Box w={['xm', 'md']}>
                     <Text mb="0.5rem">Type</Text>
 
                     <Select name="type" value={options.type} onChange={handleSelectChange}>
@@ -131,7 +131,7 @@ const Index: FC = () => {
                     </Select>
                   </Box>
 
-                  <Box w="md">
+                  <Box w={['xm', 'md']}>
                     <Stack direction="row" spacing="1rem">
                       <Text mb="0.5rem">Range</Text>
                       <Tooltip
@@ -152,7 +152,7 @@ const Index: FC = () => {
                     </Select>
                   </Box>
 
-                  <Box w="md">
+                  <Box w={['xm', 'md']}>
                     <Button colorScheme="green" variant="solid" w="100%" onClick={handleGenerate}>
                       Generate
                     </Button>

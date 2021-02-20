@@ -5,7 +5,10 @@ export default class Document extends NextDocument {
   render() {
     return (
       <Html>
-        <Head />
+        <Head>
+          <title>Bunchify</title>
+          <meta property="og:title" content="Bunchify" key="title" />
+        </Head>
         <body>
           <ColorModeScript />
           <Main />
