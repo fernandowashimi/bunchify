@@ -15,7 +15,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     <AuthProvider>
       <SWRConfig
         value={{
-          onError: (error, key) => {
+          onError: (error) => {
             if (error.status === 401) {
               router.push('/authorize');
             }
