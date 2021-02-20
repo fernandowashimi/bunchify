@@ -18,7 +18,7 @@ The information retrieved is then used to generate images that can be shared in 
 ## Examples
 
 <p align="center">
-  <img width="400px" src="https://raw.githubusercontent.com/fernandowashimi/bunchify/main/images/examples.jpg">
+  <img width="700px" src="https://raw.githubusercontent.com/fernandowashimi/bunchify/main/images/examples.jpg">
 </p>
 
 ## Terms
