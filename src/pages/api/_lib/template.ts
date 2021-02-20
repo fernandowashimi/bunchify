@@ -224,7 +224,7 @@ export function getHtml({ type, range, data, profile }: GetHTMLProps) {
           }
 
           <div class="logo_container">
-            <img src="${process.env.VERCEL_URL}/Spotify_Logo_RGB_White.png" height="30px" />
+            <img src="https://bunchify.vercel.app/Spotify_Logo_RGB_White.png" height="30px" />
           </div>
   
           <div class="heading_content">
