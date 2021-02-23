@@ -1,12 +1,23 @@
 declare namespace Application {
+  type Type = 'artists' | 'tracks';
+
+  type Range = 'short_term' | 'medium_term' | 'long_term';
+
   interface Error extends globalThis.Error {
     status?: number;
   }
 
+  interface GetTemplateInput {
+    type: string;
+    range: string;
+    data: Array<Spotify.Artist | Spotify.Tracks>;
+    profile: Spotify.PrivateUser | undefined;
+  }
+
   interface GenerateImageInput {
-    type: 'profile' | 'artists' | 'tracks';
-    range: 'short_term' | 'medium_term' | 'long_term';
-    data: Array<Spotify.Artist>;
+    type: Type;
+    range: Range;
+    data: Array<Spotify.Artist | Spotify.Tracks>;
     profile: Spotify.PrivateUser | undefined;
   }
 
@@ -18,10 +29,11 @@ declare namespace Application {
 
   interface GetTopArtistsInput {
     token: string;
-    range: 'short_term' | 'medium_term' | 'long_term';
+    type: Type;
+    range: Range;
     limit?: number;
     offset?: number;
   }
 
-  type GetTopArtistsReponse = Spotify.Paging<Spotify.Artist>;
+  type GetTopResponse = Spotify.Paging<Spotify.Artist | Spotify.Tracks>;
 }

@@ -1,7 +1,7 @@
 interface GetHTMLProps {
   type: string;
   range: string;
-  data: Array<Spotify.Artist>;
+  data: Array<Spotify.Artist | Spotify.Tracks>;
   profile: Spotify.PrivateUser | undefined;
 }
 
@@ -10,7 +10,6 @@ interface Map {
 }
 
 const type_text: Map = {
-  profile: 'Profile',
   artists: 'Artists',
   tracks: 'Tracks',
 };
@@ -21,7 +20,9 @@ const range_text: Map = {
   long_term: 'from all time',
 };
 
-export function getHtml({ type, range, data, profile }: GetHTMLProps) {
+export function getArtistsHtml({ type, range, data: artists, profile }: GetHTMLProps) {
+  const data = artists as Array<Spotify.Artist>;
+
   return `<!DOCTYPE html>
   <html lang="en">
     <head>

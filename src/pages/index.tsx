@@ -14,19 +14,17 @@ import {
   Text,
   Tooltip,
 } from '@chakra-ui/react';
-import { InfoIcon } from '@chakra-ui/icons';
+import { DownloadIcon, InfoIcon, ViewIcon } from '@chakra-ui/icons';
 
-import { Container } from '@/components/Container';
-import { DarkModeSwitch } from '@/components/DarkModeSwitch';
+import { Layout } from '@/components/Layout';
 import { Loading } from '@/components/Loading';
 import { AuthContext } from '@/providers/AuthProvider';
-import { getProfile, getTopArtists } from '@/services/spotify';
+import { getProfile, getTop } from '@/services/spotify';
 import { generateImage } from '@/services/api';
 
 const typeOptions = [
   { value: 'artists', label: 'Top artists', enabled: true },
   { value: 'tracks', label: 'Top tracks (soon)', enabled: false },
-  { value: 'profile', label: 'Profile (soon)', enabled: false },
 ];
 
 const rangeOptions = [
@@ -42,7 +40,7 @@ const rangeTooltip = `
 `;
 
 interface OptionsState {
-  type: 'profile' | 'artists' | 'tracks';
+  type: 'artists' | 'tracks';
   range: 'short_term' | 'medium_term' | 'long_term';
 }
 
@@ -54,8 +52,8 @@ const Index: FC = () => {
   const [image, setImage] = useState();
 
   const { data: profile } = useSWR('profile', () => getProfile({ token: accessToken }));
-  const { data: artists } = useSWR(`top_artists_${options.range}`, () =>
-    getTopArtists({ token: accessToken, range: options.range, limit: 10 }),
+  const { data: top } = useSWR(`top_${options.type}_${options.range}`, () =>
+    getTop({ token: accessToken, type: options.type, range: options.range, limit: 10 }),
   );
 
   const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -70,14 +68,32 @@ const Index: FC = () => {
   const handleGenerate = async () => {
     setImage(undefined);
 
+    if (!top) return;
+
     const response = await generateImage({
       type: options.type,
       range: options.range,
-      data: artists.items,
+      data: top.items,
       profile: profile,
     });
 
     setImage(response);
+  };
+
+  const handleSave = () => {
+    if (!image) return;
+
+    const anchorElement = document.createElement('a');
+    const url = URL.createObjectURL(image);
+
+    document.body.appendChild(anchorElement);
+
+    anchorElement.href = url;
+    anchorElement.download = 'bunchify_image.png';
+    anchorElement.click();
+
+    URL.revokeObjectURL(url);
+    document.body.removeChild(anchorElement);
   };
 
   useEffect(() => {
@@ -89,18 +105,17 @@ const Index: FC = () => {
   }, [accessToken]);
 
   useEffect(() => {
-    if (profile && artists && !image) {
+    if (profile && top && !image) {
       handleGenerate();
     }
-  }, [profile, artists]);
+  }, [profile, top]);
 
   return (
-    <Container minHeight="100vh">
+    <Layout>
       {loading ? (
         <Loading />
       ) : (
         <>
-          <DarkModeSwitch />
           <Stack
             direction={['column', 'row']}
             flex={1}
@@ -119,7 +134,7 @@ const Index: FC = () => {
                 )}
 
                 <Stack direction="column" flex={1} alignItems="center" spacing="1rem">
-                  <Box w={['xm', 'md']}>
+                  <Box w={['100%', '50%']}>
                     <Text mb="0.5rem">Type</Text>
 
                     <Select name="type" value={options.type} onChange={handleSelectChange}>
@@ -131,7 +146,7 @@ const Index: FC = () => {
                     </Select>
                   </Box>
 
-                  <Box w={['xm', 'md']}>
+                  <Box w={['100%', '50%']}>
                     <Stack direction="row" spacing="1rem">
                       <Text mb="0.5rem">Range</Text>
                       <Tooltip
@@ -152,9 +167,29 @@ const Index: FC = () => {
                     </Select>
                   </Box>
 
-                  <Box w={['xm', 'md']}>
-                    <Button colorScheme="green" variant="solid" w="100%" onClick={handleGenerate}>
+                  <Box w={['100%', '50%']}>
+                    <Button
+                      colorScheme="brand"
+                      variant="solid"
+                      w="100%"
+                      leftIcon={<ViewIcon />}
+                      onClick={handleGenerate}
+                    >
                       Generate
+                    </Button>
+                  </Box>
+
+                  <Box w={['100%', '50%']}>
+                    <Button
+                      colorScheme="brand"
+                      variant="solid"
+                      download="image.png"
+                      w="100%"
+                      leftIcon={<DownloadIcon />}
+                      disabled={!image}
+                      onClick={handleSave}
+                    >
+                      Save image
                     </Button>
                   </Box>
                 </Stack>
@@ -162,8 +197,8 @@ const Index: FC = () => {
             </Box>
 
             <Box w={['100%', '50%']}>
-              <Stack direction="column" spacing="1rem">
-                <Heading as="h1" size="md" textAlign="center">
+              <Stack direction="column" spacing="1rem" align="center">
+                <Heading as="h1" size="md">
                   Preview
                 </Heading>
 
@@ -179,7 +214,7 @@ const Index: FC = () => {
           </Stack>
         </>
       )}
-    </Container>
+    </Layout>
   );
 };
 

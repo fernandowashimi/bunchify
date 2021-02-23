@@ -26,14 +26,15 @@ export const getProfile = async ({
   }
 };
 
-export const getTopArtists = async ({
+export const getTop = async ({
   token,
+  type,
   range,
   limit = 20,
   offset = 0,
-}: Application.GetTopArtistsInput) => {
+}: Application.GetTopArtistsInput): Promise<Application.GetTopResponse> => {
   try {
-    const { data } = await axiosInstance.get(`/me/top/artists`, {
+    const { data } = await axiosInstance.get(`/me/top/${type}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -2,11 +2,10 @@ import { FC, useContext, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/router';
 
-import { Box, Button, Code, Image, Stack, Text, useToast } from '@chakra-ui/react';
+import { Box, Button, Code, Container, Image, Stack, Text, useToast } from '@chakra-ui/react';
 import { ArrowForwardIcon } from '@chakra-ui/icons';
 
-import { Container } from '@/components/Container';
-import { DarkModeSwitch } from '@/components/DarkModeSwitch';
+import { Layout } from '@/components/Layout';
 import { Loading } from '@/components/Loading';
 import { buildUrl, parseUrl } from '@/helpers/urlHandler';
 import { AuthContext } from '@/providers/AuthProvider';
@@ -59,25 +58,24 @@ const Authorize: FC<AuthorizeProps> = ({ spotifyParams }) => {
   }, []);
 
   return (
-    <Container height="100vh">
-      <DarkModeSwitch />
+    <Layout>
       {loading ? (
         <Loading />
       ) : (
         <>
           <Stack direction="column" spacing="2rem" alignItems="center">
-            <Box backgroundColor="gray.900" p="15px">
-              <Image src="/Bunchify_Typo.png" htmlWidth="250px" />
+            <Box p="15px">
+              <Image src="/Bunchify_Typo.svg" htmlWidth="250px" />
             </Box>
 
             <Text textAlign="center">
               Generate assets based on your <Code>Spotify</Code> data.
             </Text>
 
-            <Container>
+            <Container d="flex" justifyContent="center">
               <Button
                 rightIcon={<ArrowForwardIcon />}
-                colorScheme="green"
+                colorScheme="brand"
                 variant="solid"
                 w="auto"
                 onClick={handleAuthorization}
@@ -88,7 +86,7 @@ const Authorize: FC<AuthorizeProps> = ({ spotifyParams }) => {
           </Stack>
         </>
       )}
-    </Container>
+    </Layout>
   );
 };
 

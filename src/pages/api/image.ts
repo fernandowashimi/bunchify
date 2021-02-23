@@ -1,17 +1,29 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getScreenshot } from './_lib/chromium';
-import { getHtml } from './_lib/template';
+
 import { connectToDatabase } from '@/utils/mongodb';
+
+import { getScreenshot } from './_lib/chromium';
+import { getArtistsHtml } from './_templates/artists';
+import { getTracksHtml } from './_templates/tracks';
+
+interface Map {
+  [key: string]: (params: Application.GetTemplateInput) => string;
+}
 
 const isDev = !process.env.AWS_REGION;
 const isHtmlDebug = process.env.OG_HTML_DEBUG === '1';
+
+const TemplateType: Map = {
+  artists: getArtistsHtml,
+  tracks: getTracksHtml,
+};
 
 export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> => {
   try {
     const { type, range, data, profile } = req.body;
     const { db } = await connectToDatabase();
 
-    const { country, display_name, id, product, type: user_type } = profile as Spotify.PrivateUser;
+    const { display_name } = profile as Spotify.PrivateUser;
 
     if (!type) {
       throw new Error('Missing template type.');
@@ -25,7 +37,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> =
       throw new Error('Missing template data.');
     }
 
-    const html = getHtml({ type, range, data, profile });
+    const html = TemplateType[type]({ type, range, data, profile });
 
     if (isHtmlDebug) {
       res.setHeader('Content-Type', 'text/html');
@@ -45,7 +57,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> =
     );
 
     await db.collection('logs').insertOne({
-      profile: { country, display_name, id, product, type: user_type },
+      display_name,
       type,
       range,
       createdAt: new Date().toString(),
