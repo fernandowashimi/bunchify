@@ -1,5 +1,4 @@
 interface GetHTMLProps {
-  type: string;
   range: string;
   data: Array<Spotify.Artist | Spotify.Tracks>;
   profile: Spotify.PrivateUser | undefined;
@@ -9,30 +8,26 @@ interface Map {
   [key: string]: string;
 }
 
-const type_text: Map = {
-  artists: 'Artists',
-  tracks: 'Tracks',
-};
-
 const range_text: Map = {
   short_term: 'from last 4 weeks',
   medium_term: 'from last 6 months',
   long_term: 'from all time',
 };
 
-export function getArtistsHtml({ type, range, data: artists, profile }: GetHTMLProps) {
+export function getArtistsHtml({ range, data: artists, profile }: GetHTMLProps) {
   const data = artists as Array<Spotify.Artist>;
 
-  return `<!DOCTYPE html>
+  return `
+  <!DOCTYPE html>
   <html lang="en">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>artists_${range}</title>
   
-      <title>Image</title>
-  
+      <link rel="preconnect" href="https://fonts.gstatic.com" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@100&display=swap"
         rel="stylesheet"
       />
   
@@ -41,246 +36,284 @@ export function getArtistsHtml({ type, range, data: artists, profile }: GetHTMLP
           padding: 0;
           margin: 0;
           box-sizing: border-box;
-          font-family: Roboto Mono;
+          font-family: Roboto Mono, monospace;
+          -webkit-text-size-adjust: none;
+          font-size-adjust: none;
         }
-  
-        #wrapper {
-          width: 100vw;
-          height: 100vh;
+
+        .brand-color {
+          color: #ee1f9d;
+        }
+
+        .secondary-color {
+          color: #dbfa84;
+        }
+
+        .brand-background {
           background-color: #ee1f9d;
-          padding: 70px 15px 15px;
         }
-  
-        .bunchify_container {
+
+        .wrapper {
+          height: 100vh;
+          width: 100%;
+          padding: 128px 32px 32px 32px;
+        }
+
+        .bunchify_logo {
           position: absolute;
-          top: 55px;
-          left: 15px;
+          width: 200px;
+          top: 80px;
+          right: 32px;
         }
-        
-        .bunchify_title {
-          color: #181818;
-          font-size: 12px;
-          font-weight: 200;
-          text-align: right;
-        }
-  
+
         .content {
-          position: relative;
           width: 100%;
           height: 100%;
           background-color: #181818;
-          padding: 15px;
         }
 
-        .profile_container {
+        .header {
           display: flex;
-          flex-direction: row;
-          align-items: center;
-          position: absolute;
-          top: 15px;
-          lefT: 15px;
+          max-height: 10vh;
+          width: 100%;
         }
 
-        .profile_avatar {
+        .profile {
+          display: flex;
+          flex-grow: 1;
+          flex-shrink: 2;
+          align-items: center;
+          padding: 32px 0 32px 32px;
+        }
+
+        .profile__avatar {
           background-image: url('${profile?.images[0].url}');
           background-size: cover;
           background-position: center center;
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
+          width: 64px;
+          height: 64px;
+          border-radius: 100%;
         }
 
-        .profile_name {
-          font-size: 15px;
-          color: #fff;
-          margin-left: 4px;
+        .profile__name {
+          margin-left: 8px;
+          width: auto;
+          font-size: 1.8vh;
+          color: #ffffff;
         }
-  
-        .logo_container {
-          position: absolute;
-          padding: 15px;
-          right: 0;
-          top: 0;
-        }
-  
-        .heading_content {
-          margin-top: 60px;
-        }
-  
-        .type_title {
-          font-size: 28px;
-          color: #ee1f9d;
-          line-height: 1;
-          margin-left: 2px;
-        }
-  
-        .type_title_highlight {
-          font-size: 48px;
-          color: #dbfa84;
-          line-height: 1;
-        }
-  
-        .type_subtitle {
-          font-size: 17px;
-          color: #ee1f9d;
-          margin-left: 2px;
-        }
-  
-        .ranking_container {
-          margin-top: 32px;
-        }
-  
-        .top_one_container {
+
+        .spotify img {
           display: flex;
-          position: relative;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
+          flex-shrink: 1;
+          margin: 32px;
         }
-  
-        .rank_one_position {
-          position: absolute;
-          color: #ee1f9d;
-          font-size: 20px;
-          top: 0;
-          left: 40px;
-        }
-  
-        .rank_one_title {
-          font-size: 18px;
-          margin-top: 8px;
-          color: #dbfa84;
-        }
-  
-        .top_three_container {
-          margin-top: 20px;
-          display: flex;
-          flex-direction: row;
-          justify-content: space-between;
-        }
-  
-        .rank_three_container {
+
+        .title {
           display: flex;
           flex-direction: column;
-          align-items: center;
+          height: 10vh;
+          width: 100%;
+          padding: 0 32px;
+          line-height: 1;
+        }
+
+        .title h1 {
+          margin-left: 8px;
+          font-size: 3vh;
+          font-weight: 600;
+        }
+
+        .title h2 {
+          font-size: 4.8vh;
+          font-weight: 800;
+        }
+
+        .title h3 {
+          margin-left: 8px;
+          margin-top: 0.2vh;
+          font-size: 2vh;
+        }
+
+        .top {
+          display: flex;
+          width: 100%;
+          padding: 0 16px;
           position: relative;
-          width: 44%;
         }
-  
-        .rank_three_position {
-          position: absolute;
-          color: #ee1f9d;
-          font-size: 16px;
-          top: 0px;
-          left: 0;
+
+        .container_top_1 {
+          margin-top: 4vh;
+          height: 20vh;
+          margin-bottom: 2vh;
         }
-  
-        .rank_three_title {
-          margin-top: 4px;
-          font-size: 15px;
-          color: #dbfa84;
+
+        .top_1 {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .top_1 img {
+          height: 15vh;
+        }
+
+        .top_1 h1 {
+          margin-top: 0.5vh;
+          font-size: 2.2vh;
+          line-height: 1;
+        }
+
+        .top_1 h2 {
+          margin-top: 0.2vh;
+          font-size: 1.8vh;
+          line-height: 1;
+        }
+
+        .container_top_3 {
+          margin-top: 3vh;
+          height: 18vh;
+          display: flex;
+        }
+
+        .top_3 {
+          flex-direction: column;
+          align-items: center;
+          padding: 0 16px;
+        }
+
+        .top_3 img {
+          height: 10vh;
+        }
+
+        .top_3 h1 {
+          margin-top: 0.5vh;
+          font-size: 2vh;
+          line-height: 1;
           text-align: center;
         }
-  
-        .top_five_container {
+
+        .top_3 h2 {
+          margin-top: 0.2vh;
+          font-size: 1.6vh;
+          line-height: 1;
+        }
+
+        .container_top_5 {
+          margin-top: 3vh;
+          height: 20vh;
           display: flex;
           flex-direction: column;
-          position: relative;
-          margin-top: 28px;
+          padding: 0 32px;
         }
-  
-        .rank_five_container {
+
+        .info_top_5 {
           display: flex;
+          flex-direction: column;
+          justify-content: center;
+          margin-left: 32px
+        }
+
+        .top_5 {
           flex-direction: row;
-          align-items: center;
-          margin-bottom: 16px;
+          margin-bottom: 2vh;
+          padding-left: 64px;
         }
-  
-        .rank_five_position {
-          color: #ee1f9d;
-          font-size: 16px;
-          margin-right: 8px;
+
+        .top_5 img {
+          height: 8vh;
         }
-  
-        .rank_five_title {
-          font-size: 16px;
-          color: #dbfa84;
-          margin-left: 8px;
+
+        .top_5 h1 {
+          margin-top: 0.5vh;
+          font-size: 2vh;
+          line-height: 1;
+        }
+
+        .top_5 h2 {
+          margin-top: 0.2vh;
+          font-size: 1.6vh;
+          line-height: 1;
+        }
+
+        .position {
+          font-size: 2vh;
+          position: absolute;
+          left: 32px;
+          color: #fff;
+          font-weight: 800;
+        }
+
+        .position_first {
+          font-size: 3vh;
+          left: 64px;
+        }
+
+        .position_inline {
+          left: 0px;
         }
       </style>
     </head>
     <body>
-      <div id="wrapper">
-        <div class="bunchify_container">
-          <h1 class="bunchify_title">Made with Bunchify app.</h1>
-        </div>
-  
+      <main class="wrapper brand-background">
+        <img class="bunchify_logo" src="http://localhost:3000/Bunchify_Typo_White.svg">
         <div class="content">
-          ${
-            profile &&
-            `<div class="profile_container">
-              <div class="profile_avatar"></div>
-              <h1 class="profile_name">${profile.display_name}</h1>
-            </div>`
-          }
-
-          <div class="logo_container">
-            <img src="https://bunchify.vercel.app/Spotify_Logo_RGB_White.png" height="30px" />
+          <div class="header">
+            <div class="profile">
+              <div class="profile__avatar"></div>
+              <h1 class="profile__name">/${profile?.id}</h1>
+            </div>
+  
+            <div class="spotify">
+              <img src="https://bunchify.vercel.app/Spotify_Logo_RGB_White.png" height="64px" />
+            </div>
           </div>
   
-          <div class="heading_content">
-            <h1 class="type_title">Your Top</h1>
-            <h2 class="type_title_highlight">${type_text[type]}</h2>
-            <h3 class="type_subtitle">${range_text[range]}</h3>
+          <div class="title">
+            <h1 class="brand-color">Your Top</h1>
+            <h2 class="secondary-color">ARTISTS</h2>
+            <h3 class="brand-color">${range_text[range]}</h3>
           </div>
-          <div class="ranking_container">
-          ${
-            data.length > 0 &&
-            `<div class="top_one_container">
-              <span class="rank_one_position">1.</span>
-              <img src="${data[0].images[2].url}" width="120px" />
-              <h1 class="rank_one_title">${data[0].name}</h1>
-            </div>`
-          }
-          ${
-            data.length > 1 &&
-            `<div class="top_three_container">
-              <div class="rank_three_container">
-                <span class="rank_three_position">2.</span>
-                <img src="${data[1].images[2].url}" width="80px" />
-                <h1 class="rank_three_title">${data[1].name}</h1>
-              </div>`
-          }
-          ${
-            data.length > 2 &&
-            `<div class="rank_three_container">
-                <span class="rank_three_position">3.</span>
-                <img src="${data[2].images[2].url}" width="80px" />
-                <h1 class="rank_three_title">${data[2].name}</h1>
+  
+          <div class="container_top_1">
+            <div class="top top_1">
+              <span class="position position_first">1.</span>
+              <img src="${data[0].images[1].url}" />
+              <h1 class="secondary-color">${data[0].name}</h1>
+            </div>
+          </div>
+  
+          <div class="container_top_3">
+            <div class="top top_3">
+              <span class="position">2.</span>
+              <img src="${data[1].images[1].url}" />
+              <h1 class="secondary-color">${data[1].name}</h1>
+            </div>
+  
+            <div class="top top_3">
+              <span class="position">3.</span>
+              <img src="${data[2].images[1].url}" />
+              <h1 class="secondary-color">${data[2].name}</h1>
+            </div>
+          </div>
+  
+          <div class="container_top_5">
+            <div class="top top_5">
+              <span class="position position_inline">4.</span>
+              <img src="${data[3].images[1].url}" />
+              <div class="info_top_5">
+                <h1 class="secondary-color">${data[3].name}</h1>
               </div>
-            </div>`
-          }
-          <div class="top_five_container">
-          ${
-            data.length > 3 &&
-            `<div class="rank_five_container">
-                <span class="rank_five_position">4.</span>
-                <img src="${data[3].images[2].url}" width="40px" height="40px" />
-                <h1 class="rank_five_title">${data[3].name}</h1>
-              </div>`
-          }
-          ${
-            data.length > 4 &&
-            `<div class="rank_five_container">
-                <span class="rank_five_position">5.</span>
-                <img src="${data[4].images[2].url}" width="40px" height="40px" />
-                <h1 class="rank_five_title">${data[4].name}</h1>
-              </div>`
-          }
+            </div>
+  
+            <div class="top top_5">
+              <span class="position position_inline">5.</span>
+              <img src="${data[4].images[1].url}" />
+              <div class="info_top_5">
+                <h1 class="secondary-color">${data[4].name}</h1>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </body>
   </html>
   `;

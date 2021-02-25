@@ -24,7 +24,7 @@ import { generateImage } from '@/services/api';
 
 const typeOptions = [
   { value: 'artists', label: 'Top artists', enabled: true },
-  { value: 'tracks', label: 'Top tracks (soon)', enabled: false },
+  { value: 'tracks', label: 'Top tracks', enabled: true },
 ];
 
 const rangeOptions = [
@@ -204,7 +204,7 @@ const Index: FC = () => {
 
                 <Box d="flex" alignItems="center" justifyContent="center">
                   {image ? (
-                    <Image src={URL.createObjectURL(image)} w="auto" />
+                    <Image src={URL.createObjectURL(image)} w="375px" />
                   ) : (
                     <Skeleton h="812px" w="375px" />
                   )}

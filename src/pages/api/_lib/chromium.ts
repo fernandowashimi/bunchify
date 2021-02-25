@@ -19,7 +19,7 @@ async function getPage(isDev: boolean): Promise<Page> {
 export async function getScreenshot(html: string, isDev: boolean): Promise<Buffer> {
   const page = await getPage(isDev);
 
-  await page.setViewport({ width: 375, height: 812 });
+  await page.setViewport({ width: 828, height: 1792 });
   await page.setContent(html);
   await page.evaluateHandle('document.fonts.ready');
 

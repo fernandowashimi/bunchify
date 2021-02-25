@@ -37,7 +37,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> =
       throw new Error('Missing template data.');
     }
 
-    const html = TemplateType[type]({ type, range, data, profile });
+    const html = TemplateType[type]({ range, data, profile });
 
     if (isHtmlDebug) {
       res.setHeader('Content-Type', 'text/html');

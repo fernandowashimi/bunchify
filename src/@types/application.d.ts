@@ -8,7 +8,6 @@ declare namespace Application {
   }
 
   interface GetTemplateInput {
-    type: string;
     range: string;
     data: Array<Spotify.Artist | Spotify.Tracks>;
     profile: Spotify.PrivateUser | undefined;
