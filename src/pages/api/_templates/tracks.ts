@@ -254,7 +254,7 @@ export function getTracksHtml({ range, data: tracks, profile }: GetHTMLProps) {
     </head>
     <body>
       <main class="wrapper brand-background">
-        <img class="bunchify_logo" src="http://localhost:3000/Bunchify_Typo_White.svg">
+        <img class="bunchify_logo" src="https://bunchify.vercel.app/Bunchify_Typo_White.svg">
         <div class="content">
           <div class="header">
             <div class="profile">

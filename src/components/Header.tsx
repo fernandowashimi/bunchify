@@ -26,7 +26,13 @@ export const Header = () => {
           variant="ghost"
           aria-label="GitHub"
         >
-          <Image src={isDark ? '/Github-Mark-Light.png' : '/Github-Mark.png'} />
+          <Image
+            src={
+              isDark
+                ? 'https://bunchify.vercel.app/GitHub-Mark-Light.png'
+                : 'https://bunchify.vercel.app/GitHub-Mark.png'
+            }
+          />
         </IconButton>
 
         <DarkModeSwitch />
