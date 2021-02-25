@@ -13,6 +13,7 @@ import {
   Stack,
   Text,
   Tooltip,
+  useToast,
 } from '@chakra-ui/react';
 import { DownloadIcon, InfoIcon, ViewIcon } from '@chakra-ui/icons';
 
@@ -46,6 +47,7 @@ interface OptionsState {
 
 const Index: FC = () => {
   const { accessToken } = useContext(AuthContext);
+  const toast = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [options, setOptions] = useState<OptionsState>({ type: 'artists', range: 'short_term' });
@@ -69,6 +71,18 @@ const Index: FC = () => {
     setImage(undefined);
 
     if (!top) return;
+
+    if (top.items.length < 5) {
+      toast({
+        title: 'Failed to generate.',
+        description: "You don't have enough data to proceed.",
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
+
+      return;
+    }
 
     const response = await generateImage({
       type: options.type,

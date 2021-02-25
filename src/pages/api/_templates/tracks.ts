@@ -87,7 +87,7 @@ export function getTracksHtml({ range, data: tracks, profile }: GetHTMLProps) {
         }
 
         .profile__avatar {
-          background-image: url('${profile?.images[0].url}');
+          background-image: url('${profile?.images[0]?.url ?? ''}');
           background-size: cover;
           background-position: center center;
           width: 64px;
@@ -258,8 +258,13 @@ export function getTracksHtml({ range, data: tracks, profile }: GetHTMLProps) {
         <div class="content">
           <div class="header">
             <div class="profile">
-              <div class="profile__avatar"></div>
-              <h1 class="profile__name">/${profile?.id}</h1>
+              ${
+                profile?.images[0] &&
+                `
+                <div class="profile__avatar"></div>
+              `
+              }
+              <h1 class="profile__name">/${profile?.display_name}</h1>
             </div>
   
             <div class="spotify">
@@ -272,51 +277,56 @@ export function getTracksHtml({ range, data: tracks, profile }: GetHTMLProps) {
             <h2 class="secondary-color">TRACKS</h2>
             <h3 class="brand-color">${range_text[range]}</h3>
           </div>
-  
-          <div class="container_top_1">
-            <div class="top top_1">
-              <span class="position position_first">1.</span>
-              <img src="${data[0].album.images[1].url}" />
-              <h1 class="secondary-color">${data[0].name}</h1>
-              <h2 class="brand-color">${data[0].artists[0].name}</h2>
-            </div>
-          </div>
-  
-          <div class="container_top_3">
-            <div class="top top_3">
-              <span class="position">2.</span>
-              <img src="${data[1].album.images[1].url}" />
-              <h1 class="secondary-color">${data[1].name}</h1>
-              <h2 class="brand-color">${data[1].artists[0].name}</h2>
-            </div>
-  
-            <div class="top top_3">
-              <span class="position">3.</span>
-              <img src="${data[2].album.images[1].url}" />
-              <h1 class="secondary-color">${data[2].name}</h1>
-              <h2 class="brand-color">${data[2].artists[0].name}</h2>
-            </div>
-          </div>
-  
-          <div class="container_top_5">
-            <div class="top top_5">
-              <span class="position position_inline">4.</span>
-              <img src="${data[3].album.images[1].url}" />
-              <div class="info_top_5">
-                <h1 class="secondary-color">${data[3].name}</h1>
-                <h2 class="brand-color">${data[3].artists[0].name}</h2>
+              
+          ${
+            data.length >= 5 &&
+            `
+            <div class="container_top_1">
+              <div class="top top_1">
+                <span class="position position_first">1.</span>
+                <img src="${data[0].album.images[1].url}" />
+                <h1 class="secondary-color">${data[0].name}</h1>
+                <h2 class="brand-color">${data[0].artists[0].name}</h2>
               </div>
             </div>
-  
-            <div class="top top_5">
-              <span class="position position_inline">5.</span>
-              <img src="${data[4].album.images[1].url}" />
-              <div class="info_top_5">
-                <h1 class="secondary-color">${data[4].name}</h1>
-                <h2 class="brand-color">${data[4].artists[0].name}</h2>
+    
+            <div class="container_top_3">
+              <div class="top top_3">
+                <span class="position">2.</span>
+                <img src="${data[1].album.images[1].url}" />
+                <h1 class="secondary-color">${data[1].name}</h1>
+                <h2 class="brand-color">${data[1].artists[0].name}</h2>
+              </div>
+    
+              <div class="top top_3">
+                <span class="position">3.</span>
+                <img src="${data[2].album.images[1].url}" />
+                <h1 class="secondary-color">${data[2].name}</h1>
+                <h2 class="brand-color">${data[2].artists[0].name}</h2>
               </div>
             </div>
-          </div>
+    
+            <div class="container_top_5">
+              <div class="top top_5">
+                <span class="position position_inline">4.</span>
+                <img src="${data[3].album.images[1].url}" />
+                <div class="info_top_5">
+                  <h1 class="secondary-color">${data[3].name}</h1>
+                  <h2 class="brand-color">${data[3].artists[0].name}</h2>
+                </div>
+              </div>
+    
+              <div class="top top_5">
+                <span class="position position_inline">5.</span>
+                <img src="${data[4].album.images[1].url}" />
+                <div class="info_top_5">
+                  <h1 class="secondary-color">${data[4].name}</h1>
+                  <h2 class="brand-color">${data[4].artists[0].name}</h2>
+                </div>
+              </div>
+            </div>
+            `
+          }
         </div>
       </main>
     </body>
