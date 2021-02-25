@@ -55,7 +55,7 @@ const Index: FC = () => {
 
   const { data: profile } = useSWR('profile', () => getProfile({ token: accessToken }));
   const { data: top } = useSWR(`top_${options.type}_${options.range}`, () =>
-    getTop({ token: accessToken, type: options.type, range: options.range, limit: 10 }),
+    getTop({ token: accessToken, type: options.type, range: options.range, limit: 5 }),
   );
 
   const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
