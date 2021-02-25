@@ -29,8 +29,8 @@ export const Header = () => {
           <Image
             src={
               isDark
-                ? 'https://bunchify.vercel.app/GitHub-Mark-Light.png'
-                : 'https://bunchify.vercel.app/GitHub-Mark.png'
+                ? 'https://bunchify.app/GitHub-Mark-Light.png'
+                : 'https://bunchify.app/GitHub-Mark.png'
             }
           />
         </IconButton>

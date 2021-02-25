@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://bunchify.vercel.app">
+  <a href="https://bunchify.app">
     <img width="400px" src="https://raw.githubusercontent.com/fernandowashimi/bunchify/main/images/logo.png">
   </a>
 </p>
@@ -8,7 +8,7 @@
 
 ## Demo
 
-[bunchify.vercel.app](https://bunchify.vercel.app)
+[bunchify.app](https://bunchify.app)
 
 ## About
 

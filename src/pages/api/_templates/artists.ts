@@ -254,7 +254,7 @@ export function getArtistsHtml({ range, data: artists, profile }: GetHTMLProps) 
     </head>
     <body>
       <main class="wrapper brand-background">
-        <img class="bunchify_logo" src="https://bunchify.vercel.app/Bunchify_Typo_White.svg">
+        <img class="bunchify_logo" src="https://bunchify.app/Bunchify_Typo_White.svg">
         <div class="content">
           <div class="header">
             <div class="profile">
@@ -263,7 +263,7 @@ export function getArtistsHtml({ range, data: artists, profile }: GetHTMLProps) 
             </div>
   
             <div class="spotify">
-              <img src="https://bunchify.vercel.app/Spotify_Logo_RGB_White.png" height="64px" />
+              <img src="https://bunchify.app/Spotify_Logo_RGB_White.png" height="64px" />
             </div>
           </div>
   
