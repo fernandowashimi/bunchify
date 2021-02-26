@@ -223,7 +223,7 @@ const Index: FC = () => {
 
                     <Popover placement="bottom-start">
                       <PopoverTrigger>
-                        <Button w="100%" backgroundColor={primaryColor} />
+                        <Button w="100%" backgroundColor={debouncedPrimaryColor} />
                       </PopoverTrigger>
                       <PopoverContent w="250px" p="1.5rem" alignItems="center">
                         <PopoverArrow />
@@ -256,7 +256,7 @@ const Index: FC = () => {
 
                     <Popover placement="bottom-start">
                       <PopoverTrigger>
-                        <Button w="100%" backgroundColor={secondaryColor} />
+                        <Button w="100%" backgroundColor={debouncedSecondaryColor} />
                       </PopoverTrigger>
                       <PopoverContent w="250px" p="1.5rem" alignItems="center">
                         <PopoverArrow />
