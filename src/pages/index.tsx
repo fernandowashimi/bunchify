@@ -8,7 +8,6 @@ import {
   Button,
   Heading,
   Image,
-  Input,
   Popover,
   PopoverArrow,
   PopoverBody,
