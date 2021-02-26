@@ -3,6 +3,11 @@ declare namespace Application {
 
   type Range = 'short_term' | 'medium_term' | 'long_term';
 
+  interface Colors {
+    primary: string;
+    secondary: string;
+  }
+
   interface Error extends globalThis.Error {
     status?: number;
   }
@@ -11,6 +16,7 @@ declare namespace Application {
     range: string;
     data: Array<Spotify.Artist | Spotify.Tracks>;
     profile: Spotify.PrivateUser | undefined;
+    colors: Colors;
   }
 
   interface GenerateImageInput {
@@ -18,6 +24,7 @@ declare namespace Application {
     range: Range;
     data: Array<Spotify.Artist | Spotify.Tracks>;
     profile: Spotify.PrivateUser | undefined;
+    colors: Colors;
   }
 
   interface GetProfileInput {

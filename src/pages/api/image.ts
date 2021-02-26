@@ -20,7 +20,7 @@ const TemplateType: Map = {
 
 export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> => {
   try {
-    const { type, range, data, profile } = req.body;
+    const { type, range, data, profile, colors } = req.body;
     const { db } = await connectToDatabase();
 
     const { display_name } = profile as Spotify.PrivateUser;
@@ -37,7 +37,11 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> =
       throw new Error('Missing template data.');
     }
 
-    const html = TemplateType[type]({ range, data, profile });
+    if (!colors) {
+      throw new Error('Missing colors hex.');
+    }
+
+    const html = TemplateType[type]({ range, data, profile, colors });
 
     if (isHtmlDebug) {
       res.setHeader('Content-Type', 'text/html');
@@ -56,12 +60,14 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> =
       'public, immutable, no-transform, s-maxage=31536000, max-age=31536000',
     );
 
-    await db.collection('logs').insertOne({
-      display_name,
-      type,
-      range,
-      createdAt: new Date().toString(),
-    });
+    if (process.env.NODE_ENV !== 'development') {
+      await db.collection('logs').insertOne({
+        display_name,
+        type,
+        range,
+        createdAt: new Date().toString(),
+      });
+    }
 
     res.end(file);
   } catch (e) {

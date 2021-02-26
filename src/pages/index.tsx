@@ -8,6 +8,13 @@ import {
   Button,
   Heading,
   Image,
+  Input,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   Skeleton,
   Stack,
@@ -16,12 +23,19 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { DownloadIcon, InfoIcon, ViewIcon } from '@chakra-ui/icons';
+import { HexColorInput, HexColorPicker } from 'react-colorful';
+import { useDebounce } from 'use-debounce';
 
 import { Layout } from '@/components/Layout';
 import { Loading } from '@/components/Loading';
 import { AuthContext } from '@/providers/AuthProvider';
 import { getProfile, getTop } from '@/services/spotify';
 import { generateImage } from '@/services/api';
+
+interface OptionsState {
+  type: 'artists' | 'tracks';
+  range: 'short_term' | 'medium_term' | 'long_term';
+}
 
 const typeOptions = [
   { value: 'artists', label: 'Top artists', enabled: true },
@@ -40,18 +54,18 @@ const rangeTooltip = `
   Long term: calculated from several years of data and including all new data as it becomes available.
 `;
 
-interface OptionsState {
-  type: 'artists' | 'tracks';
-  range: 'short_term' | 'medium_term' | 'long_term';
-}
-
 const Index: FC = () => {
   const { accessToken } = useContext(AuthContext);
   const toast = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [options, setOptions] = useState<OptionsState>({ type: 'artists', range: 'short_term' });
-  const [image, setImage] = useState();
+  const [imageBlob, setImageBlob] = useState<Blob | undefined>();
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [primaryColor, setPrimaryColor] = useState('#ee1f9d');
+  const [secondaryColor, setSecondaryColor] = useState('#dbfa84');
+  const [debouncedPrimaryColor] = useDebounce(primaryColor, 200);
+  const [debouncedSecondaryColor] = useDebounce(secondaryColor, 200);
 
   const { data: profile } = useSWR('profile', () => getProfile({ token: accessToken }));
   const { data: top } = useSWR(`top_${options.type}_${options.range}`, () =>
@@ -68,7 +82,7 @@ const Index: FC = () => {
   };
 
   const handleGenerate = async () => {
-    setImage(undefined);
+    setImageBlob(undefined);
 
     if (!top) return;
 
@@ -89,24 +103,26 @@ const Index: FC = () => {
       range: options.range,
       data: top.items,
       profile: profile,
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+      },
     });
 
-    setImage(response);
+    setImageBlob(response);
   };
 
   const handleSave = () => {
-    if (!image) return;
+    if (!imageBlob || !imageUrl) return;
 
     const anchorElement = document.createElement('a');
-    const url = URL.createObjectURL(image);
 
     document.body.appendChild(anchorElement);
 
-    anchorElement.href = url;
+    anchorElement.href = imageUrl;
     anchorElement.download = 'bunchify_image.png';
     anchorElement.click();
 
-    URL.revokeObjectURL(url);
     document.body.removeChild(anchorElement);
   };
 
@@ -119,10 +135,23 @@ const Index: FC = () => {
   }, [accessToken]);
 
   useEffect(() => {
-    if (profile && top && !image) {
+    if (profile && top && !imageBlob) {
       handleGenerate();
     }
   }, [profile, top]);
+
+  useEffect(() => {
+    if (!imageBlob) return;
+
+    const reader = new FileReader();
+    reader.readAsDataURL(imageBlob);
+
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') return;
+
+      setImageUrl(reader.result);
+    };
+  }, [imageBlob]);
 
   return (
     <Layout>
@@ -182,6 +211,72 @@ const Index: FC = () => {
                   </Box>
 
                   <Box w={['100%', '50%']}>
+                    <Stack direction="row" spacing="1rem">
+                      <Text mb="0.5rem">Primary color</Text>
+                      <Tooltip
+                        label="Darker colors may make it difficult to read."
+                        aria-label="Range tooltip"
+                        placement="right-end"
+                      >
+                        <InfoIcon w="18px" h="18px" mt="4px" cursor="pointer" />
+                      </Tooltip>
+                    </Stack>
+
+                    <Popover placement="bottom-start">
+                      <PopoverTrigger>
+                        <Button w="100%" backgroundColor={primaryColor} />
+                      </PopoverTrigger>
+                      <PopoverContent w="250px" p="1.5rem" alignItems="center">
+                        <PopoverArrow />
+                        <PopoverCloseButton />
+                        <PopoverBody>
+                          <Stack direction="column" spacing="1rem">
+                            <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
+                            <HexColorInput
+                              color={primaryColor}
+                              onChange={setPrimaryColor}
+                              style={{ borderRadius: 8, textAlign: 'center', color: '#333' }}
+                            />
+                          </Stack>
+                        </PopoverBody>
+                      </PopoverContent>
+                    </Popover>
+                  </Box>
+
+                  <Box w={['100%', '50%']}>
+                    <Stack direction="row" spacing="1rem">
+                      <Text mb="0.5rem">Secondary color</Text>
+                      <Tooltip
+                        label="Darker colors may make it difficult to read."
+                        aria-label="Range tooltip"
+                        placement="right-end"
+                      >
+                        <InfoIcon w="18px" h="18px" mt="4px" cursor="pointer" />
+                      </Tooltip>
+                    </Stack>
+
+                    <Popover placement="bottom-start">
+                      <PopoverTrigger>
+                        <Button w="100%" backgroundColor={secondaryColor} />
+                      </PopoverTrigger>
+                      <PopoverContent w="250px" p="1.5rem" alignItems="center">
+                        <PopoverArrow />
+                        <PopoverCloseButton />
+                        <PopoverBody>
+                          <Stack direction="column" spacing="1rem">
+                            <HexColorPicker color={secondaryColor} onChange={setSecondaryColor} />
+                            <HexColorInput
+                              color={secondaryColor}
+                              onChange={setSecondaryColor}
+                              style={{ borderRadius: 8, textAlign: 'center', color: '#333' }}
+                            />
+                          </Stack>
+                        </PopoverBody>
+                      </PopoverContent>
+                    </Popover>
+                  </Box>
+
+                  <Box w={['100%', '50%']} pt="2rem">
                     <Button
                       colorScheme="brand"
                       variant="solid"
@@ -200,7 +295,7 @@ const Index: FC = () => {
                       download="image.png"
                       w="100%"
                       leftIcon={<DownloadIcon />}
-                      disabled={!image}
+                      disabled={!imageBlob}
                       onClick={handleSave}
                     >
                       Save image
@@ -217,10 +312,10 @@ const Index: FC = () => {
                 </Heading>
 
                 <Box d="flex" alignItems="center" justifyContent="center">
-                  {image ? (
-                    <Image src={URL.createObjectURL(image)} w="375px" />
+                  {imageUrl || imageBlob ? (
+                    <Image src={imageUrl} w="300px" />
                   ) : (
-                    <Skeleton h="812px" w="375px" />
+                    <Skeleton h="650px" w="300px" />
                   )}
                 </Box>
               </Stack>

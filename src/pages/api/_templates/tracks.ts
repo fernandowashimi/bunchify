@@ -1,9 +1,3 @@
-interface GetHTMLProps {
-  range: string;
-  data: Array<Spotify.Artist | Spotify.Tracks>;
-  profile: Spotify.PrivateUser | undefined;
-}
-
 interface Map {
   [key: string]: string;
 }
@@ -14,7 +8,12 @@ const range_text: Map = {
   long_term: 'from all time',
 };
 
-export function getTracksHtml({ range, data: tracks, profile }: GetHTMLProps) {
+export function getTracksHtml({
+  range,
+  data: tracks,
+  profile,
+  colors,
+}: Application.GetTemplateInput) {
   const data = tracks as Array<Spotify.Tracks>;
 
   return `
@@ -42,15 +41,15 @@ export function getTracksHtml({ range, data: tracks, profile }: GetHTMLProps) {
         }
 
         .brand-color {
-          color: #ee1f9d;
+          color: ${colors.primary};
         }
 
         .secondary-color {
-          color: #dbfa84;
+          color: ${colors.secondary};
         }
 
         .brand-background {
-          background-color: #ee1f9d;
+          background-color: ${colors.primary};
         }
 
         .wrapper {
