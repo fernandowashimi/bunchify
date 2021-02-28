@@ -7,7 +7,11 @@ export default class Document extends NextDocument {
       <Html>
         <Head>
           <title>Bunchify</title>
-          <meta property="og:title" content="Bunchify" key="title" />
+          <meta
+            name="description"
+            content="Bunchify allows you to generate shareable images based on statistics about your Spotify usage."
+          />
+          <meta name="viewport" content="initial-scale=1.0, width=device-width" />
         </Head>
         <body>
           <ColorModeScript />
