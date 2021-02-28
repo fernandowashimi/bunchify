@@ -16,12 +16,13 @@ export const Header = () => {
       justifyContent="space-between"
       alignItems="center"
     >
-      <Image src="/Bunchify_Logo.svg" boxSize="32px" />
+      <Image src="/Bunchify_Logo.svg" alt="Bunchify" boxSize="32px" />
 
       <Stack direction="row" spacing="1rem" alignItems="center">
         <IconButton
           as="a"
           href="https://github.com/fernandowashimi/bunchify"
+          rel="noreferrer"
           target="_blank"
           variant="ghost"
           aria-label="GitHub"

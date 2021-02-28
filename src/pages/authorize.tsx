@@ -98,7 +98,7 @@ const Authorize: FC<AuthorizeProps> = ({ spotifyParams }) => {
                         px={['2rem', '1rem']}
                         justifyContent={['center', 'flex-start']}
                       >
-                        <Image src="/Bunchify_Typo.svg" htmlWidth="200px" />
+                        <Image src="/Bunchify_Typo.svg" alt="Bunchify" htmlWidth="200px" />
                       </Box>
 
                       <Text px={['2rem', '1rem']} fontSize="xl" textAlign={['justify', 'left']}>
@@ -134,7 +134,7 @@ const Authorize: FC<AuthorizeProps> = ({ spotifyParams }) => {
 
                 <SlideFade in={!loading} offsetY={600}>
                   <Box d={['none', 'flex']} w="sm" justifyContent="flex-start">
-                    <Image src="/Mockup.png" objectFit="contain" />
+                    <Image src="/Mockup.png" alt="Mockup" objectFit="contain" />
                   </Box>
                 </SlideFade>
               </Stack>
