@@ -7,6 +7,7 @@ import { SWRConfig } from 'swr';
 import { AuthProvider } from '@/providers/AuthProvider';
 
 import theme from '../theme';
+import { GlobalStyles } from '@/components/GlobalStyles';
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -23,6 +24,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         }}
       >
         <ChakraProvider resetCSS theme={theme}>
+          <GlobalStyles />
           <Component {...pageProps} />
         </ChakraProvider>
       </SWRConfig>

@@ -23,8 +23,6 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> =
     const { type, range, data, profile, colors } = req.body;
     const { db } = await connectToDatabase();
 
-    const { display_name } = profile as Spotify.PrivateUser;
-
     if (!type) {
       throw new Error('Missing template type.');
     }
@@ -62,7 +60,6 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> =
 
     if (process.env.NODE_ENV !== 'development') {
       await db.collection('logs').insertOne({
-        display_name,
         type,
         range,
         createdAt: new Date().toString(),
