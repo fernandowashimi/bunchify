@@ -27,13 +27,7 @@ export const Header = () => {
           variant="ghost"
           aria-label="GitHub"
         >
-          <Image
-            src={
-              isDark
-                ? 'https://bunchify.app/GitHub-Mark-Light.png'
-                : 'https://bunchify.app/GitHub-Mark.png'
-            }
-          />
+          <Image src={isDark ? '/GitHub-Mark-Light.png' : '/GitHub-Mark.png'} />
         </IconButton>
 
         <DarkModeSwitch />
