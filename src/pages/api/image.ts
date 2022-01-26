@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { connectToDatabase } from '@/utils/mongodb';
+// import { connectToDatabase } from '@/utils/mongodb';
 
 import { getScreenshot } from './_lib/chromium';
 import { getArtistsHtml } from './_templates/artists';
@@ -21,7 +21,7 @@ const TemplateType: Map = {
 export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> => {
   try {
     const { type, range, data, profile, colors } = req.body;
-    const { db } = await connectToDatabase();
+    // const { db } = await connectToDatabase();
 
     if (!type) {
       throw new Error('Missing template type.');
@@ -58,13 +58,13 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<any> =
       'public, immutable, no-transform, s-maxage=31536000, max-age=31536000',
     );
 
-    if (process.env.NODE_ENV !== 'development') {
-      await db.collection('logs').insertOne({
-        type,
-        range,
-        createdAt: new Date().toString(),
-      });
-    }
+    // if (process.env.NODE_ENV !== 'development') {
+    //   await db.collection('logs').insertOne({
+    //     type,
+    //     range,
+    //     createdAt: new Date().toString(),
+    //   });
+    // }
 
     res.end(file);
   } catch (e) {
