@@ -10,7 +10,11 @@ export const generateImage = async (body: Application.GenerateImageInput) => {
   } catch (e) {
     const error: Application.Error = new Error('An error occurred while fetching the data.');
 
-    error.status = e.response.status;
+    if (axios.isAxiosError(e)) {
+      error.status = e.response?.status;
+    } else {
+      error.status = 500;
+    }
 
     throw error;
   }
