@@ -1,5 +1,6 @@
 import { FC, useContext, useEffect, useState } from 'react';
 
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import {
@@ -65,18 +66,25 @@ const Authorize: FC<AuthorizeProps> = ({ spotifyParams }) => {
     } catch (e) {
       setLoading(false);
 
-      toast({
-        title: 'Authorization failed.',
-        description: e.message,
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-      });
+      if (e instanceof Error) {
+        toast({
+          title: 'Authorization failed.',
+          description: e.message,
+          status: 'error',
+          duration: 9000,
+          isClosable: true,
+        });
+      }
     }
   }, []);
 
   return (
     <Layout>
+      <Head>
+        <title>Bunchify</title>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+      </Head>
+
       {loading ? (
         <Loading />
       ) : (

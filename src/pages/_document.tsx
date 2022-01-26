@@ -6,12 +6,10 @@ export default class Document extends NextDocument {
     return (
       <Html>
         <Head>
-          <title>Bunchify</title>
           <meta
             name="description"
             content="Bunchify allows you to generate shareable images based on statistics about your Spotify usage."
           />
-          <meta name="viewport" content="initial-scale=1.0, width=device-width" />
         </Head>
         <body>
           <ColorModeScript />

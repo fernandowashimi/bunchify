@@ -1,5 +1,6 @@
 import { ChangeEvent, FC, useContext, useEffect, useState } from 'react';
 
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import useSWR from 'swr';
@@ -154,6 +155,11 @@ const Index: FC = () => {
 
   return (
     <Layout>
+      <Head>
+        <title>Bunchify</title>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+      </Head>
+
       {loading ? (
         <Loading />
       ) : (
