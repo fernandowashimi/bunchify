@@ -1,0 +1,66 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Atmosphere } from "@/components/atmosphere";
+import { toast } from "@/components/ui/toast";
+
+const FAILURES: Record<string, string> = {
+  denied: "Spotify authorization was denied. You can try again.",
+  failed: "Spotify authorization failed. You can try again.",
+};
+
+export function AuthorizeScreen({ error }: { error?: string }) {
+  const announced = useRef(false);
+
+  useEffect(() => {
+    if (!error || announced.current) return;
+    const title = FAILURES[error];
+    if (!title) return;
+    announced.current = true;
+    toast.add({ title, type: "error" });
+  }, [error]);
+
+  return (
+    <Atmosphere>
+      <main className="flex min-h-svh flex-col items-center justify-center px-6 py-20 text-center">
+        <img
+          src="/Bunchify_Typo_White.svg"
+          alt="Bunchify"
+          className="mb-7 h-auto w-[min(72vw,420px)]"
+        />
+        <p className="font-heading mb-6 max-w-[14ch] text-[clamp(1.6rem,4vw,2.5rem)] leading-none font-bold tracking-tight">
+          Your Spotify tops, made for Stories.
+        </p>
+        <Button
+          nativeButton={false}
+          render={<a href="/api/auth/login" />}
+          className="h-11 px-7 text-base"
+        >
+          Connect Spotify
+        </Button>
+        <p className="mt-4 max-w-[42ch] text-sm leading-snug text-white/50">
+          Connects read-only to your Spotify tops. Revoke anytime in your{" "}
+          <a
+            className="text-white/75 underline underline-offset-2"
+            href="https://www.spotify.com/account/apps/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Spotify account
+          </a>
+          . See Spotify’s{" "}
+          <a
+            className="text-white/75 underline underline-offset-2"
+            href="https://www.spotify.com/legal/privacy-policy/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Privacy Policy
+          </a>
+          .
+        </p>
+      </main>
+    </Atmosphere>
+  );
+}

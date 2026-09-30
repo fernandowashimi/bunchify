@@ -1,7 +1,5 @@
-export default function Home() {
-  return (
-    <main>
-      <h1>Home</h1>
-    </main>
-  );
+import { HomeScreen } from "@/components/home-screen";
+
+export default function HomePage() {
+  return <HomeScreen />;
 }
