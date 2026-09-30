@@ -1,0 +1,3 @@
+# Spotify PKCE with httpOnly cookies and a server BFF
+
+Listeners authorize with **Authorization Code + PKCE** on the existing Spotify app. Login/callback/logout are App Router Route Handlers that set **httpOnly** cookies — separate access, refresh, and optional expiry cookies (not a sealed blob, not `localStorage`). Scope is **`user-top-read`**. Spotify Web API calls stay **server-only**; Home talks to thin BFF routes (`/api/me`, `/api/top` or equivalent) and caches with TanStack Query. Middleware may redirect unauthenticated `/` → `/authorize`; authoritative session checks live in the BFF / Spotify helper. Implicit grant and client-held Bearer tokens are out.
