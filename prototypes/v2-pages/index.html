@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bunchify v2 — authorize + home prototypes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Sans:wght@400;500;600&family=Outfit:wght@400;500;600;700&family=Roboto+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body { background: #0a0a0a; color: #f5f5f5; }
+    #stage { min-height: 100vh; }
+
+    /* —— Picker (verbatim from PICKER.md) —— */
+    .proto-picker {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 4px;
+      border-radius: 999px;
+      background: rgba(10, 10, 10, 0.82);
+      -webkit-backdrop-filter: blur(12px) saturate(1.4);
+      backdrop-filter: blur(12px) saturate(1.4);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+        0 8px 24px rgba(0, 0, 0, 0.24),
+        0 2px 6px rgba(0, 0, 0, 0.12);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .proto-picker-highlight {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      will-change: transform;
+    }
+    .proto-picker[data-ready] .proto-picker-highlight {
+      transition:
+        transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+        width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+    }
+    .proto-picker-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.55);
+      font: inherit;
+      cursor: pointer;
+      transition: color 150ms ease-out;
+    }
+    .proto-picker-item:hover { color: rgba(255, 255, 255, 0.85); }
+    .proto-picker-item:active { transform: scale(0.97); }
+    .proto-picker-item:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.4);
+      outline-offset: 2px;
+    }
+    .proto-picker-item[data-active] { color: #fff; }
+    .proto-picker-divider {
+      width: 1px;
+      height: 16px;
+      margin: 0 4px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .proto-picker-replay { padding: 0 10px; font-size: 14px; }
+
+    /* —— Shared prototype chrome —— */
+    .page-switch {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-family: inherit;
+    }
+    .page-switch button {
+      border: 0;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .page-switch button[data-active] {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+
+    .grain::before {
+      content: "";
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      opacity: 0.09;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+    }
+
+    .shell { position: relative; z-index: 2; min-height: 100vh; overflow: hidden; }
+    .grid-texture {
+      position: absolute;
+      inset: -20%;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, #000 10%, transparent 68%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, #000 10%, transparent 68%);
+      opacity: 0.45;
+      animation: grid-drift 28s linear infinite;
+    }
+    @keyframes grid-drift {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-48px, -48px, 0); }
+    }
+    .shell > :not(.grid-texture) { position: relative; z-index: 1; }
+    .enter { animation: enter 420ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+    .enter-delay { animation-delay: 80ms; }
+    .enter-delay-2 { animation-delay: 140ms; }
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(12px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .enter, .enter-delay, .enter-delay-2 { animation: none; }
+      .story-frame.is-updating { animation: none !important; }
+      .btn:active, .gen-btn:active { transform: none !important; }
+      .grid-texture { animation: none; }
+    }
+
+    .typo { display: block; height: auto; }
+    .btn {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      border-radius: 999px;
+      background: #EE1F9D;
+      color: #fff;
+      padding: 0.9rem 1.4rem;
+      transition: transform 160ms ease-out, filter 160ms ease-out;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:active { transform: scale(0.97); }
+    .btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    .trust {
+      margin: 0;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.48);
+      max-width: 42ch;
+    }
+    .trust a {
+      color: rgba(255,255,255,0.72);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .trust a:hover { color: #fff; }
+
+    .story-frame {
+      aspect-ratio: 828 / 1792;
+      width: min(100%, 280px);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+      transform-origin: center;
+      transition: transform 280ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .story-frame.is-updating {
+      animation: pulse 280ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(0.985); }
+      100% { transform: scale(1); }
+    }
+    .story-inner {
+      position: absolute;
+      inset: 12px;
+      border-radius: 8px;
+      padding: 1.15rem 0.95rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      color: #f3f3f3;
+      background: #181818;
+      font-family: "Roboto Mono", ui-monospace, monospace;
+    }
+    .story-brand {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .story-title {
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.2;
+      color: #fff;
+    }
+    .story-title .accent { font-weight: 700; }
+    .story-list {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .story-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.68rem;
+      font-weight: 500;
+    }
+    .story-rank {
+      width: 1.1rem;
+      opacity: 0.55;
+    }
+    .story-dot {
+      width: 1.55rem;
+      height: 1.55rem;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .field label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+    .field select, .swatch {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      font: inherit;
+      padding: 0.65rem 0.75rem;
+    }
+    .swatch {
+      height: 40px;
+      cursor: pointer;
+      padding: 0;
+      appearance: none;
+    }
+    .gen-btn {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      border-radius: 12px;
+      background: #EE1F9D;
+      color: #fff;
+      padding: 0.85rem 1rem;
+      width: 100%;
+      transition: transform 160ms ease-out, filter 160ms ease-out;
+    }
+    .gen-btn.secondary {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .gen-btn:hover { filter: brightness(1.08); }
+    .gen-btn:active { transform: scale(0.97); }
+    .gen-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+    .toast {
+      position: fixed;
+      bottom: 88px;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 60;
+      background: rgba(20,20,20,0.92);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      padding: 0.65rem 0.95rem;
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      transition: opacity 180ms ease-out, transform 180ms ease-out;
+    }
+    .toast[data-show] {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* —— Monument —— */
+    .v-monument {
+      --display: "Syne", system-ui, sans-serif;
+      --body: "DM Sans", system-ui, sans-serif;
+      font-family: var(--body);
+      background:
+        radial-gradient(1200px 700px at 50% -10%, rgba(238,31,157,0.28), transparent 55%),
+        radial-gradient(900px 500px at 90% 80%, rgba(238,31,157,0.08), transparent 50%),
+        #0c0a0d;
+    }
+    .v-monument .display { font-family: var(--display); }
+    .monument-auth {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 5rem 1.5rem 6rem;
+      text-align: center;
+    }
+    .monument-auth .typo { width: min(72vw, 420px); margin: 0 auto 1.75rem; }
+    .monument-auth .promise {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: clamp(1.6rem, 4vw, 2.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      max-width: 14ch;
+      margin: 0 auto 1.5rem;
+    }
+    .monument-auth .btn { font-size: 1rem; padding: 1rem 1.75rem; }
+    .monument-auth .trust { margin: 1rem auto 0; }
+    .monument-home {
+      min-height: 100vh;
+      padding: 4.5rem 1.25rem 6.5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      justify-items: center;
+    }
+    .monument-home .preview-wrap {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+    .monument-home .story-frame { width: min(100%, 320px); }
+    .monument-dock {
+      width: min(100%, 420px);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      padding: 1rem;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+    }
+    .monument-dock .actions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    @media (min-width: 900px) {
+      .monument-home {
+        grid-template-columns: minmax(260px, 300px) 280px;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        padding-inline: 2rem;
+      }
+      .monument-dock {
+        position: static;
+        transform: none;
+        width: 280px;
+        grid-template-columns: 1fr;
+      }
+      .monument-dock .actions { grid-template-columns: 1fr; }
+    }
+
+    /* —— Workbench —— */
+    .v-workbench {
+      --display: "Space Grotesk", system-ui, sans-serif;
+      --body: "IBM Plex Sans", system-ui, sans-serif;
+      font-family: var(--body);
+      background:
+        linear-gradient(165deg, rgba(238,31,157,0.16), transparent 42%),
+        #0b0b0e;
+    }
+    .v-workbench .display { font-family: var(--display); }
+    .wb-header {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .wb-header img { height: 18px; }
+    .wb-header a {
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+    .wb-auth {
+      min-height: calc(100vh - 52px);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      align-items: center;
+      padding: 2.5rem 1.5rem 5.5rem;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .wb-auth .copy { max-width: 28rem; }
+    .wb-auth .typo { width: min(100%, 260px); margin-bottom: 1.25rem; }
+    .wb-auth .promise {
+      font-family: var(--display);
+      font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin: 0 0 1.25rem;
+      max-width: 22ch;
+    }
+    .wb-auth .cta-row { display: flex; flex-wrap: wrap; gap: 0.85rem; align-items: center; }
+    .wb-auth .atmosphere {
+      min-height: 280px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(238,31,157,0.35), transparent 55%),
+        radial-gradient(circle at 70% 70%, rgba(219,250,132,0.12), transparent 45%),
+        rgba(255,255,255,0.03);
+    }
+    @media (min-width: 860px) {
+      .wb-auth { grid-template-columns: 1.05fr 0.95fr; }
+    }
+    .wb-home {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+      padding: 1.25rem 1.25rem 6rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .wb-panel {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 1.1rem;
+      background: rgba(255,255,255,0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .wb-panel h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .wb-preview {
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      padding: 0.5rem;
+    }
+    @media (min-width: 900px) {
+      .wb-home {
+        max-width: 820px;
+        grid-template-columns: 280px 300px;
+        justify-content: center;
+        align-items: start;
+      }
+      .wb-preview .story-frame { width: 280px; }
+    }
+
+    /* —— Stage —— */
+    .v-stage {
+      --display: "Outfit", system-ui, sans-serif;
+      --body: "DM Sans", system-ui, sans-serif;
+      font-family: var(--body);
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(238,31,157,0.22), transparent 60%),
+        #09090b;
+    }
+    .v-stage .display { font-family: var(--display); }
+    .stage-auth {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 1.25rem 6rem;
+      text-align: center;
+    }
+    .stage-mark {
+      width: 56px;
+      height: 56px;
+      margin-bottom: 1.25rem;
+    }
+    .stage-auth .typo { width: min(70vw, 280px); margin: 0 auto 1rem; }
+    .stage-auth .promise {
+      margin: 0 0 1.5rem;
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.62);
+      max-width: 32ch;
+      line-height: 1.45;
+    }
+    .stage-auth .btn { min-width: 220px; }
+    .stage-auth .trust { margin: 1rem auto 0; }
+    .stage-home-header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+    }
+    .stage-home-header img { height: 16px; opacity: 0.9; }
+    .stage-home-header a {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.75rem;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .stage-home {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 0.5rem 1rem 6.5rem;
+    }
+    .stage-home .story-frame {
+      width: min(100%, 260px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 22px;
+    }
+    .stage-strip {
+      width: min(100%, 520px);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      padding: 0.85rem;
+      border-radius: 18px;
+      background: rgba(12,12,14,0.85);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .stage-strip .actions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="stage"></div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <nav class="proto-picker" aria-label="Prototype variants">
+    <span class="proto-picker-highlight" aria-hidden="true"></span>
+    <button class="proto-picker-item" data-active aria-current="true">Monument</button>
+    <button class="proto-picker-item">Workbench</button>
+    <button class="proto-picker-item">Stage</button>
+    <span class="proto-picker-divider" aria-hidden="true"></span>
+    <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
+  </nav>
+
+  <script>
+    const TYPO = "../../public/Bunchify_Typo_White.svg";
+    const LOGO = "../../public/Bunchify_Logo.svg";
+    const ARTISTS = [
+      ["1", "Charli XCX"],
+      ["2", "Caroline Polachek"],
+      ["3", "Rosalía"],
+      ["4", "Rina Sawayama"],
+      ["5", "SOPHIE"],
+    ];
+
+    const state = {
+      page: "authorize",
+      type: "artists",
+      range: "short_term",
+      primary: "#EE1F9D",
+      secondary: "#DBFA84",
+      saved: false,
+    };
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.setAttribute("data-show", "");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.removeAttribute("data-show"), 1600);
+    }
+
+    function storyMarkup() {
+      const rows = ARTISTS.map(
+        ([rank, name]) => `
+          <div class="story-row">
+            <span class="story-rank">${rank}</span>
+            <span class="story-dot" style="background:${state.secondary}"></span>
+            <span>${name}</span>
+          </div>`
+      ).join("");
+      return `
+        <div class="story-frame" id="story" style="background:${state.primary};">
+          <div class="story-inner">
+            <div class="story-brand" style="color:${state.primary}">Bunchify</div>
+            <div class="story-title">Your top ${state.type}<br/><span class="accent" style="color:${state.secondary}">· ${labelRange(state.range)}</span></div>
+            <div class="story-list">${rows}</div>
+          </div>
+        </div>`;
+    }
+
+    function labelRange(r) {
+      return ({ short_term: "last 4 weeks", medium_term: "last 6 months", long_term: "all time" })[r];
+    }
+
+    function pageSwitch() {
+      return `
+        <div class="page-switch" role="tablist" aria-label="Page">
+          <button type="button" data-page="authorize" ${state.page === "authorize" ? "data-active" : ""}>Authorize</button>
+          <button type="button" data-page="home" ${state.page === "home" ? "data-active" : ""}>Home</button>
+        </div>`;
+    }
+
+    function controls(dense) {
+      return `
+        <div class="field">
+          <label for="type">Type</label>
+          <select id="type" name="type">
+            <option value="artists" ${state.type === "artists" ? "selected" : ""}>Top artists</option>
+            <option value="tracks" ${state.type === "tracks" ? "selected" : ""}>Top tracks</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="range">Range</label>
+          <select id="range" name="range">
+            <option value="short_term" ${state.range === "short_term" ? "selected" : ""}>Short term</option>
+            <option value="medium_term" ${state.range === "medium_term" ? "selected" : ""}>Medium term</option>
+            <option value="long_term" ${state.range === "long_term" ? "selected" : ""}>Long term</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="primary">Primary</label>
+          <input class="swatch" id="primary" type="color" value="${state.primary}" />
+        </div>
+        <div class="field">
+          <label for="secondary">Secondary (story)</label>
+          <input class="swatch" id="secondary" type="color" value="${state.secondary}" />
+        </div>
+        <div class="actions">
+          <button type="button" class="gen-btn" data-action="generate">Generate</button>
+          <button type="button" class="gen-btn secondary" data-action="save">Save image</button>
+        </div>`;
+    }
+
+    function wireShared(root) {
+      root.querySelectorAll("[data-page]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.page = btn.getAttribute("data-page");
+          remountCurrent();
+        });
+      });
+      const type = root.querySelector("#type");
+      const range = root.querySelector("#range");
+      const primary = root.querySelector("#primary");
+      const secondary = root.querySelector("#secondary");
+      type?.addEventListener("change", (e) => { state.type = e.target.value; bumpStory(root); });
+      range?.addEventListener("change", (e) => { state.range = e.target.value; bumpStory(root); });
+      primary?.addEventListener("input", (e) => { state.primary = e.target.value; bumpStory(root, false); });
+      secondary?.addEventListener("input", (e) => { state.secondary = e.target.value; bumpStory(root, false); });
+      root.querySelector('[data-action="generate"]')?.addEventListener("click", () => {
+        state.saved = true;
+        bumpStory(root, true);
+        showToast("Story refreshed");
+      });
+      root.querySelector('[data-action="save"]')?.addEventListener("click", () => {
+        showToast("Saved bunchify_image.png");
+      });
+      root.querySelector('[data-action="authorize"]')?.addEventListener("click", () => {
+        state.page = "home";
+        remountCurrent();
+        showToast("Connected · welcome back");
+      });
+    }
+
+    function bumpStory(root, animate = true) {
+      const existing = root.querySelector("#story");
+      if (!existing) return;
+      const parent = existing.parentElement;
+      const tmp = document.createElement("div");
+      tmp.innerHTML = storyMarkup().trim();
+      const next = tmp.firstElementChild;
+      parent.replaceChild(next, existing);
+      if (animate) {
+        next.classList.add("is-updating");
+        next.addEventListener("animationend", () => next.classList.remove("is-updating"), { once: true });
+      }
+    }
+
+    function gridTexture() {
+      return `<div class="grid-texture" aria-hidden="true"></div>`;
+    }
+
+    function monument() {
+      const auth = `
+        <div class="shell grain v-monument">
+          ${gridTexture()}
+          ${pageSwitch()}
+          <main class="monument-auth">
+            <div class="enter">
+              <img class="typo" src="${TYPO}" alt="Bunchify" />
+            </div>
+            <p class="promise display enter enter-delay">Your Spotify tops, made for Stories.</p>
+            <div class="enter enter-delay-2">
+              <button class="btn" type="button" data-action="authorize">Connect Spotify</button>
+              <p class="trust">Connects read-only to your Spotify tops. Revoke anytime in your <a href="https://www.spotify.com/account/apps/" target="_blank" rel="noopener noreferrer">Spotify account</a>. See Spotify’s <a href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
+            </div>
+          </main>
+        </div>`;
+      const home = `
+        <div class="shell grain v-monument">
+          ${gridTexture()}
+          ${pageSwitch()}
+          <main class="monument-home">
+            <div class="preview-wrap enter">${storyMarkup()}</div>
+            <aside class="monument-dock enter enter-delay">${controls()}</aside>
+          </main>
+        </div>`;
+      return state.page === "authorize" ? auth : home;
+    }
+
+    function workbench() {
+      const header = `
+        <header class="wb-header">
+          <img src="${TYPO}" alt="Bunchify" />
+          <a href="https://github.com/fernandowashimi/bunchify" target="_blank" rel="noreferrer">GitHub</a>
+        </header>`;
+      const auth = `
+        <div class="shell grain v-workbench">
+          ${gridTexture()}
+          ${pageSwitch()}
+          ${header}
+          <main class="wb-auth">
+            <div class="copy enter">
+              <img class="typo" src="${TYPO}" alt="" />
+              <p class="promise display">Turn your top artists and tracks into a shareable story.</p>
+              <div class="cta-row">
+                <button class="btn" type="button" data-action="authorize">Get started</button>
+                <p class="trust" style="margin:0">Connects read-only to your Spotify tops. Revoke anytime in your <a href="https://www.spotify.com/account/apps/" target="_blank" rel="noopener noreferrer">Spotify account</a>. See Spotify’s <a href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
+              </div>
+            </div>
+            <div class="atmosphere enter enter-delay" aria-hidden="true"></div>
+          </main>
+        </div>`;
+      const home = `
+        <div class="shell grain v-workbench">
+          ${gridTexture()}
+          ${pageSwitch()}
+          ${header}
+          <main class="wb-home">
+            <section class="wb-panel enter">
+              <h2 class="display">Generator</h2>
+              ${controls(true)}
+            </section>
+            <section class="wb-preview enter enter-delay">${storyMarkup()}</section>
+          </main>
+        </div>`;
+      return state.page === "authorize" ? auth : home;
+    }
+
+    function stage() {
+      const auth = `
+        <div class="shell grain v-stage">
+          ${gridTexture()}
+          ${pageSwitch()}
+          <main class="stage-auth">
+            <img class="stage-mark enter" src="${LOGO}" alt="" />
+            <img class="typo enter enter-delay" src="${TYPO}" alt="Bunchify" />
+            <p class="promise enter enter-delay">Shareable story images from your Spotify tops.</p>
+            <div class="enter enter-delay-2">
+              <button class="btn" type="button" data-action="authorize">Connect with Spotify</button>
+              <p class="trust">Connects read-only to your Spotify tops. Revoke anytime in your <a href="https://www.spotify.com/account/apps/" target="_blank" rel="noopener noreferrer">Spotify account</a>. See Spotify’s <a href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
+            </div>
+          </main>
+        </div>`;
+      const home = `
+        <div class="shell grain v-stage">
+          ${gridTexture()}
+          ${pageSwitch()}
+          <header class="stage-home-header">
+            <img src="${TYPO}" alt="Bunchify" />
+            <a href="https://github.com/fernandowashimi/bunchify" target="_blank" rel="noreferrer">GitHub</a>
+          </header>
+          <main class="stage-home">
+            <div class="enter">${storyMarkup()}</div>
+            <aside class="stage-strip enter enter-delay">${controls()}</aside>
+          </main>
+        </div>`;
+      return state.page === "authorize" ? auth : home;
+    }
+
+    const variants = [monument, workbench, stage];
+    let remountCurrent = () => {};
+
+    const stageEl = document.getElementById("stage");
+    const picker = document.querySelector(".proto-picker");
+    const highlight = picker.querySelector(".proto-picker-highlight");
+    const items = [...picker.querySelectorAll(".proto-picker-item:not(.proto-picker-replay)")];
+    const replay = picker.querySelector(".proto-picker-replay");
+    let current = 0;
+
+    function moveHighlight() {
+      const el = items[current];
+      highlight.style.width = el.offsetWidth + "px";
+      highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+    }
+
+    function mount(i) {
+      stageEl.innerHTML = "";
+      requestAnimationFrame(() => {
+        stageEl.innerHTML = variants[i]();
+        wireShared(stageEl);
+      });
+    }
+
+    function setActive(i) {
+      if (i < 0 || i >= variants.length) return;
+      current = i;
+      items.forEach((el, j) => {
+        el.toggleAttribute("data-active", j === i);
+        if (j === i) el.setAttribute("aria-current", "true");
+        else el.removeAttribute("aria-current");
+      });
+      moveHighlight();
+      const url = new URL(location);
+      url.searchParams.set("v", i + 1);
+      history.replaceState(null, "", url);
+      mount(i);
+    }
+
+    remountCurrent = () => mount(current);
+
+    items.forEach((el, i) => el.addEventListener("click", () => setActive(i)));
+    replay?.addEventListener("click", () => mount(current));
+    window.addEventListener("resize", moveHighlight);
+
+    document.addEventListener("keydown", (e) => {
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= variants.length) setActive(num - 1);
+      else if (e.key === "ArrowRight") setActive((current + 1) % variants.length);
+      else if (e.key === "ArrowLeft") setActive((current - 1 + variants.length) % variants.length);
+      else if (e.key === "r" || e.key === "R") mount(current);
+    });
+
+    setActive((parseInt(new URLSearchParams(location.search).get("v"), 10) || 1) - 1);
+    requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute("data-ready", "")));
+  </script>
+</body>
+</html>
