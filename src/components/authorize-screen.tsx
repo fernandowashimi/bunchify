@@ -28,7 +28,7 @@ export function AuthorizeScreen({ error }: { error?: string }) {
           <img
             src="/Bunchify_Typo_White.svg"
             alt="Bunchify"
-            className="h-auto w-[min(72vw,420px)]"
+            className="h-auto w-[min(36vw,210px)]"
           />
           <p className="font-heading max-w-[14ch] text-[clamp(1.6rem,4vw,2.5rem)] leading-[1.05] font-bold tracking-tight">
             Your Spotify tops, made for Stories.
