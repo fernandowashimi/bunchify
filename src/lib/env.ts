@@ -16,3 +16,7 @@ export function spotifyEnv() {
     clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
   };
 }
+
+export function appUrl(path: string) {
+  return new URL(path, new URL(spotifyEnv().redirectUri).origin);
+}

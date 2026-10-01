@@ -30,7 +30,7 @@ export default defineConfig({
       timeout: 120_000,
       env: {
         SPOTIFY_CLIENT_ID: "test-client",
-        SPOTIFY_REDIRECT_URI: `${appOrigin}/api/auth/callback`,
+        SPOTIFY_REDIRECT_URI: "http://127.0.0.1:3100/api/auth/callback",
         SPOTIFY_ACCOUNTS_URL: stubOrigin,
         SPOTIFY_API_URL: stubOrigin,
       },

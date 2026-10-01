@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -132,8 +132,7 @@
 .monument-sky {
   background:
     radial-gradient(1200px 700px at 50% -10%, rgba(238, 31, 157, 0.28), transparent 55%),
-    radial-gradient(900px 500px at 90% 80%, rgba(238, 31, 157, 0.08), transparent 50%),
-    #0c0a0d;
+    radial-gradient(900px 500px at 90% 80%, rgba(238, 31, 157, 0.08), transparent 50%), #0c0a0d;
 }
 
 .grid-drift {
@@ -142,12 +141,12 @@
     linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, #000 10%, transparent 68%);
-  opacity: 0.45;
+  opacity: 0.65;
   animation: grid-drift 28s linear infinite;
 }
 
 .grain::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   opacity: 0.09;

@@ -72,7 +72,10 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && url.pathname === "/authorize") {
-    const callback = new URL("/api/auth/callback", redirectBase);
+    const redirectUri = url.searchParams.get("redirect_uri");
+    const callback = redirectUri
+      ? new URL(redirectUri)
+      : new URL("/api/auth/callback", redirectBase);
     if (state.mode === "deny") {
       callback.searchParams.set("error", "access_denied");
       callback.searchParams.set("state", url.searchParams.get("state") ?? "");

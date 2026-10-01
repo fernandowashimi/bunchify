@@ -23,43 +23,47 @@ export function AuthorizeScreen({ error }: { error?: string }) {
 
   return (
     <Atmosphere>
-      <main className="flex min-h-svh flex-col items-center justify-center px-6 py-20 text-center">
-        <img
-          src="/Bunchify_Typo_White.svg"
-          alt="Bunchify"
-          className="mb-7 h-auto w-[min(72vw,420px)]"
-        />
-        <p className="font-heading mb-6 max-w-[14ch] text-[clamp(1.6rem,4vw,2.5rem)] leading-none font-bold tracking-tight">
-          Your Spotify tops, made for Stories.
-        </p>
-        <Button
-          nativeButton={false}
-          render={<a href="/api/auth/login" />}
-          className="h-11 px-7 text-base"
-        >
-          Connect Spotify
-        </Button>
-        <p className="mt-4 max-w-[42ch] text-sm leading-snug text-white/50">
-          Connects read-only to your Spotify tops. Revoke anytime in your{" "}
-          <a
-            className="text-white/75 underline underline-offset-2"
-            href="https://www.spotify.com/account/apps/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Spotify account
-          </a>
-          . See Spotify’s{" "}
-          <a
-            className="text-white/75 underline underline-offset-2"
-            href="https://www.spotify.com/legal/privacy-policy/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Privacy Policy
-          </a>
-          .
-        </p>
+      <main className="flex min-h-svh flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="flex flex-col items-center gap-12">
+          <img
+            src="/Bunchify_Typo_White.svg"
+            alt="Bunchify"
+            className="h-auto w-[min(72vw,420px)]"
+          />
+          <p className="font-heading max-w-[14ch] text-[clamp(1.6rem,4vw,2.5rem)] leading-[1.05] font-bold tracking-tight">
+            Your Spotify tops, made for Stories.
+          </p>
+          <div className="flex flex-col items-center gap-4">
+            <Button
+              nativeButton={false}
+              render={<a href="/api/auth/login" />}
+              className="h-11 px-7 text-base"
+            >
+              Connect Spotify
+            </Button>
+            <p className="max-w-[42ch] text-sm leading-snug text-white/50">
+              Connects read-only to your Spotify tops. Revoke anytime in your{" "}
+              <a
+                className="text-white/75 underline underline-offset-2"
+                href="https://www.spotify.com/account/apps/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Spotify account
+              </a>
+              . See Spotify’s{" "}
+              <a
+                className="text-white/75 underline underline-offset-2"
+                href="https://www.spotify.com/legal/privacy-policy/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Privacy Policy
+              </a>
+              .
+            </p>
+          </div>
+        </div>
       </main>
     </Atmosphere>
   );
