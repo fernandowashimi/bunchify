@@ -90,9 +90,30 @@ test("a top with fewer than five items shows the failure and does not download",
   await request.post(`${stub}/__control`, { data: { mode: "insufficient" } });
   await page.goto("/");
   await page.getByRole("button", { name: "Connect Spotify" }).click();
-  await expect(page.getByText("You don't have enough data to proceed.")).toBeVisible();
+  const preview = page.getByRole("region", { name: "Story preview" });
+  await expect(page.locator("[data-slot=toast]")).toContainText("You don't have enough data to proceed.");
+  await expect(preview.getByText("You don't have enough data to proceed.")).toBeVisible();
+  await expect(preview.locator("[data-slot=skeleton]")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Save image" })).toBeDisabled();
   await expect(page.getByRole("img", { name: "Story preview" })).toHaveCount(0);
+});
+
+test("a failed story shows a status in the preview instead of a skeleton", async ({ page }) => {
+  await page.route("**/api/story**", (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Could not make your story." }),
+    }),
+  );
+  await page.goto("/");
+  await page.getByRole("button", { name: "Connect Spotify" }).click();
+
+  const preview = page.getByRole("region", { name: "Story preview" });
+  await expect(preview.getByText("Could not make your story.")).toBeVisible({ timeout: 30_000 });
+  await expect(preview.locator("[data-slot=skeleton]")).toHaveCount(0);
+  await expect(preview.getByRole("img", { name: "Story preview" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Save image" })).toBeDisabled();
 });
 
 test("logout returns the listener to Authorize", async ({ page }) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { OctagonXIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Atmosphere } from "@/components/atmosphere";
@@ -60,6 +61,15 @@ async function loadStory(request: StoryRequest) {
   return { url: URL.createObjectURL(blob), blob };
 }
 
+function StoryPreviewStatus({ tone, children }: { tone: "waiting" | "failed"; children: string }) {
+  return (
+    <p className="flex size-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-muted-foreground">
+      {tone === "failed" ? <OctagonXIcon className="size-5 text-destructive" aria-hidden="true" /> : null}
+      {children}
+    </p>
+  );
+}
+
 export function HomeScreen() {
   const router = useRouter();
   const [type, setType] = useState<TopType>("artists");
@@ -67,6 +77,7 @@ export function HomeScreen() {
   const [primary, setPrimary] = useState(DEFAULT_PRIMARY);
   const [secondary, setSecondary] = useState(DEFAULT_SECONDARY);
   const [request, setRequest] = useState<StoryRequest | { skipped: true } | null>(null);
+  const [brokenUrl, setBrokenUrl] = useState<string | null>(null);
   const warned = useRef<string | null>(null);
 
   const profile = useQuery({
@@ -140,21 +151,44 @@ export function HomeScreen() {
   }
 
   const loading = profile.isPending || top.isPending;
+  const storyUrl = story.data?.url ?? null;
+  const imageBroken = storyUrl !== null && brokenUrl === storyUrl;
+  const showImage = storyUrl !== null && !imageBroken;
+  const showSkeleton = !showImage && story.isFetching;
+  const previewStatus: { tone: "waiting" | "failed"; text: string } = imageBroken
+    ? { tone: "failed", text: "Could not show your story." }
+    : (request && "skipped" in request) || story.error?.message === "insufficient"
+      ? { tone: "failed", text: INSUFFICIENT_TOP }
+      : story.isError
+        ? { tone: "failed", text: "Could not make your story." }
+        : top.isError
+          ? { tone: "failed", text: "Could not load your top." }
+          : profile.isError
+            ? { tone: "failed", text: "Could not load your profile." }
+            : { tone: "waiting", text: "Loading your tops…" };
 
   return (
     <Atmosphere>
       <main className="mx-auto flex min-h-svh w-full max-w-5xl flex-col items-center gap-6 px-5 py-8 min-[900px]:flex-row min-[900px]:justify-center">
         <div className="flex w-full max-w-[320px] justify-center">
-          <div className="aspect-[828/1792] w-full overflow-hidden rounded-[18px] bg-black/40">
-            {story.data ? (
+          <div
+            role="region"
+            aria-label="Story preview"
+            aria-busy={showSkeleton || loading}
+            className="aspect-[828/1792] w-full overflow-hidden rounded-[18px] bg-black/40"
+          >
+            {showImage ? (
               <img
-                key={story.data.url}
-                src={story.data.url}
+                key={storyUrl}
+                src={storyUrl}
                 alt="Story preview"
                 className="story-arrive size-full object-cover"
+                onError={() => setBrokenUrl(storyUrl)}
               />
-            ) : (
+            ) : showSkeleton ? (
               <Skeleton className="size-full rounded-[18px]" />
+            ) : (
+              <StoryPreviewStatus tone={previewStatus.tone}>{previewStatus.text}</StoryPreviewStatus>
             )}
           </div>
         </div>
