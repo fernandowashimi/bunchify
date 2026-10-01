@@ -1,5 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 
+export const PKCE_COOKIES = {
+  verifier: "bunchify_pkce",
+  state: "bunchify_state",
+} as const;
+
 function base64url(bytes: Uint8Array) {
   return Buffer.from(bytes)
     .toString("base64")

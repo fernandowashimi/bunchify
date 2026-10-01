@@ -13,7 +13,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "tsx --test src/lib/session.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
@@ -37,6 +38,7 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.8",
     "tailwindcss": "4.3.3",
+    "tsx": "4.20.5",
     "typescript": "5.9.3"
   }
 }

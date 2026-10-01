@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { spotifyEnv } from "@/lib/env";
-import { createChallenge, createVerifier } from "@/lib/pkce";
+import { createChallenge, createVerifier, PKCE_COOKIES } from "@/lib/pkce";
 import { requestHost } from "@/lib/request-origin";
-import { COOKIES, cookieBase } from "@/lib/session";
+import { cookieBase } from "@/lib/session";
 
 export async function GET(request: NextRequest) {
   const env = spotifyEnv();
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   const response = NextResponse.redirect(url);
   const base = { ...cookieBase(), maxAge: 600 };
-  response.cookies.set(COOKIES.verifier, verifier, base);
-  response.cookies.set(COOKIES.state, state, base);
+  response.cookies.set(PKCE_COOKIES.verifier, verifier, base);
+  response.cookies.set(PKCE_COOKIES.state, state, base);
   return response;
 }

@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { appUrl } from "@/lib/env";
-import { safeEqual } from "@/lib/pkce";
-import { COOKIES, cookieBase } from "@/lib/session";
-import { applySession, exchangeCode } from "@/lib/spotify";
+import { PKCE_COOKIES, safeEqual } from "@/lib/pkce";
+import { cookieBase, store } from "@/lib/session";
+import { exchangeCode } from "@/lib/spotify";
 
 function fail(error: "denied" | "failed") {
   const response = NextResponse.redirect(appUrl(`/authorize?error=${error}`));
   const expired = { ...cookieBase(), maxAge: 0 };
-  response.cookies.set(COOKIES.verifier, "", expired);
-  response.cookies.set(COOKIES.state, "", expired);
+  response.cookies.set(PKCE_COOKIES.verifier, "", expired);
+  response.cookies.set(PKCE_COOKIES.state, "", expired);
   return response;
 }
 
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
 
   const code = params.get("code");
   const state = params.get("state");
-  const expected = request.cookies.get(COOKIES.state)?.value;
-  const verifier = request.cookies.get(COOKIES.verifier)?.value;
+  const expected = request.cookies.get(PKCE_COOKIES.state)?.value;
+  const verifier = request.cookies.get(PKCE_COOKIES.verifier)?.value;
 
   if (!code || !state || !expected || !verifier || !safeEqual(state, expected)) {
     return fail("failed");
@@ -32,11 +32,12 @@ export async function GET(request: NextRequest) {
   if (!tokens?.access_token) return fail("failed");
 
   const response = NextResponse.redirect(appUrl("/"));
+  store(tokens, {
+    read: request.cookies,
+    write: response.cookies,
+  });
   const base = cookieBase();
-  applySession((name, value, maxAge) => {
-    response.cookies.set(name, value, { ...base, maxAge });
-  }, tokens);
-  response.cookies.set(COOKIES.verifier, "", { ...base, maxAge: 0 });
-  response.cookies.set(COOKIES.state, "", { ...base, maxAge: 0 });
+  response.cookies.set(PKCE_COOKIES.verifier, "", { ...base, maxAge: 0 });
+  response.cookies.set(PKCE_COOKIES.state, "", { ...base, maxAge: 0 });
   return response;
 }

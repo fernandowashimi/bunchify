@@ -21,8 +21,8 @@ A person who authorizes Spotify and generates stories.
 _Avoid_: User, customer, account
 
 **Session**:
-The listener's Spotify auth state held in httpOnly cookies (access token, refresh token, optional expiry) — not a database user record.
-_Avoid_: Account, login, JWT user, AuthProvider token
+The listener's Spotify auth state held in httpOnly cookies (access token, refresh token, optional expiry) — not a database user record, and not the Authorize handshake.
+_Avoid_: Account, login, JWT user, AuthProvider token, PKCE verifier, OAuth state
 
 **Top**:
 The Spotify top artists or tracks payload (for a chosen type and time range) used to build a story.

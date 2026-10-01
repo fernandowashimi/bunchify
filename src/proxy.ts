@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { requestOrigin } from "@/lib/request-origin";
-import { COOKIES } from "@/lib/session";
+import { present } from "@/lib/session";
 
 export function proxy(request: NextRequest) {
-  const hasSession =
-    request.cookies.has(COOKIES.access) || request.cookies.has(COOKIES.refresh);
+  const hasSession = present(request.cookies);
   const { pathname } = request.nextUrl;
   const origin = requestOrigin(request);
 

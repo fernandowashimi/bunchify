@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
-import { COOKIES, cookieBase } from "@/lib/session";
+import { session, requestToken } from "@/lib/session-request";
+import { SessionError } from "@/lib/session";
 import { spotifyEnv } from "@/lib/env";
 
 export class SpotifyError extends Error {
@@ -30,101 +30,38 @@ export type TopItem = {
   images: Image[];
 };
 
-const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
-
-async function requestToken(body: URLSearchParams) {
-  const env = spotifyEnv();
-  if (env.clientSecret) body.set("client_secret", env.clientSecret);
-
-  const response = await fetch(new URL("/api/token", env.accounts), {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-    cache: "no-store",
-  });
-
-  if (!response.ok) return null;
-  return (await response.json()) as TokenResponse;
-}
-
-async function saveSession(tokens: TokenResponse, previousRefresh?: string) {
-  const store = await cookies();
-  const base = cookieBase();
-  const expiresIn = tokens.expires_in ?? 3600;
-  store.set(COOKIES.access, tokens.access_token, { ...base, maxAge: expiresIn });
-  const refresh = tokens.refresh_token ?? previousRefresh;
-  if (refresh) {
-    store.set(COOKIES.refresh, refresh, { ...base, maxAge: REFRESH_MAX_AGE });
+function rethrowSession(error: unknown): never {
+  if (error instanceof SessionError) {
+    throw new SpotifyError(error.message, error.status);
   }
-  store.set(COOKIES.expiry, String(Date.now() + expiresIn * 1000), {
-    ...base,
-    maxAge: expiresIn,
-  });
+  throw error;
 }
 
-export async function clearSession() {
-  const store = await cookies();
-  store.delete(COOKIES.access);
-  store.delete(COOKIES.refresh);
-  store.delete(COOKIES.expiry);
-}
-
-async function refreshAccess(refreshToken: string) {
-  const tokens = await requestToken(
-    new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-      client_id: spotifyEnv().clientId,
-    }),
-  );
-
-  if (!tokens?.access_token) {
-    await clearSession();
-    throw new SpotifyError("Session expired.", 401);
+async function accessBearer(options?: { force?: boolean }) {
+  try {
+    return await session.bearer(options);
+  } catch (error) {
+    rethrowSession(error);
   }
-
-  await saveSession(tokens, refreshToken);
-  return tokens.access_token;
-}
-
-async function accessToken() {
-  const store = await cookies();
-  const access = store.get(COOKIES.access)?.value;
-  const refresh = store.get(COOKIES.refresh)?.value;
-  const expiry = Number(store.get(COOKIES.expiry)?.value ?? 0);
-
-  if (access && expiry > Date.now() + 15_000) return access;
-  if (!refresh) {
-    await clearSession();
-    throw new SpotifyError("Session missing.", 401);
-  }
-
-  return refreshAccess(refresh);
 }
 
 async function spotifyFetch(path: string) {
   const env = spotifyEnv();
-  let token = await accessToken();
-
   const call = (bearer: string) =>
     fetch(`${env.api}${path}`, {
       headers: { Authorization: `Bearer ${bearer}` },
       cache: "no-store",
     });
 
+  let token = await accessBearer();
   let response = await call(token);
   if (response.status === 401) {
-    const refresh = (await cookies()).get(COOKIES.refresh)?.value;
-    if (!refresh) {
-      await clearSession();
-      throw new SpotifyError("Session missing.", 401);
-    }
-    token = await refreshAccess(refresh);
+    token = await accessBearer({ force: true });
     response = await call(token);
   }
 
   if (response.status === 401) {
-    await clearSession();
+    await session.clear();
     throw new SpotifyError("Session expired.", 401);
   }
 
@@ -145,17 +82,7 @@ export async function exchangeCode(code: string, verifier: string) {
       client_id: env.clientId,
       code_verifier: verifier,
     }),
-  );
-}
-
-export function applySession(
-  set: (name: string, value: string, maxAge: number) => void,
-  tokens: TokenResponse,
-) {
-  const expiresIn = tokens.expires_in ?? 3600;
-  set(COOKIES.access, tokens.access_token, expiresIn);
-  if (tokens.refresh_token) set(COOKIES.refresh, tokens.refresh_token, REFRESH_MAX_AGE);
-  set(COOKIES.expiry, String(Date.now() + expiresIn * 1000), expiresIn);
+  ) as Promise<TokenResponse | null>;
 }
 
 export async function getProfile(): Promise<ListenerProfile> {
