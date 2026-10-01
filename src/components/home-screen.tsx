@@ -13,7 +13,9 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { INSUFFICIENT_TOP, RANGE_HELP } from "@/lib/story-copy";
 import type { TopRange, TopType } from "@/lib/spotify";
 
-type Profile = { displayName: string };
+const DEFAULT_PRIMARY = "#EE1F9D";
+const DEFAULT_SECONDARY = "#DBFA84";
+
 type TopResponse = { items: unknown[] };
 type StoryRequest = {
   id: number;
@@ -22,9 +24,6 @@ type StoryRequest = {
   primary: string;
   secondary: string;
 };
-
-const DEFAULT_PRIMARY = "#EE1F9D";
-const DEFAULT_SECONDARY = "#DBFA84";
 
 async function readJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -72,33 +71,24 @@ function StoryPreviewStatus({ tone, children }: { tone: "waiting" | "failed"; ch
 
 export function HomeScreen() {
   const router = useRouter();
-  const [type, setType] = useState<TopType>("artists");
-  const [range, setRange] = useState<TopRange>("short_term");
+  const [type, setType] = useState<TopType | null>(null);
+  const [range, setRange] = useState<TopRange | null>(null);
   const [primary, setPrimary] = useState(DEFAULT_PRIMARY);
   const [secondary, setSecondary] = useState(DEFAULT_SECONDARY);
-  const [request, setRequest] = useState<StoryRequest | { skipped: true } | null>(null);
+  const [request, setRequest] = useState<StoryRequest | null>(null);
   const [brokenUrl, setBrokenUrl] = useState<string | null>(null);
   const warned = useRef<string | null>(null);
 
-  const profile = useQuery({
-    queryKey: ["me"],
-    queryFn: () => readJson<Profile>("/api/me"),
-  });
-
   const top = useQuery({
     queryKey: ["top", type, range],
-    queryFn: () => readJson<TopResponse>(`/api/top?type=${type}&range=${range}`),
+    enabled: type !== null && range !== null,
+    queryFn: () => {
+      if (!type || !range) throw new Error("missing top");
+      return readJson<TopResponse>(`/api/top?type=${type}&range=${range}`);
+    },
   });
 
-  if (request === null && profile.data && top.data) {
-    if (top.data.items.length < 5) {
-      setRequest({ skipped: true });
-    } else {
-      setRequest({ id: 1, type, range, primary, secondary });
-    }
-  }
-
-  const storyRequest = request && "type" in request ? request : null;
+  const storyRequest = request;
   const story = useQuery({
     queryKey: ["story", storyRequest],
     enabled: storyRequest !== null,
@@ -106,14 +96,10 @@ export function HomeScreen() {
   });
 
   useEffect(() => {
-    if (
-      profile.error?.message === "unauthorized" ||
-      top.error?.message === "unauthorized" ||
-      story.error?.message === "unauthorized"
-    ) {
+    if (top.error?.message === "unauthorized" || story.error?.message === "unauthorized") {
       router.push("/authorize");
     }
-  }, [profile.error, top.error, story.error, router]);
+  }, [top.error, story.error, router]);
 
   useEffect(() => {
     if (top.isError && top.error?.message !== "unauthorized") {
@@ -122,7 +108,7 @@ export function HomeScreen() {
   }, [top.isError, top.error]);
 
   useEffect(() => {
-    if (!top.data || top.data.items.length >= 5) return;
+    if (!type || !range || !top.data || top.data.items.length >= 5) return;
     const key = `${type}:${range}`;
     if (warned.current === key) return;
     warned.current = key;
@@ -130,6 +116,7 @@ export function HomeScreen() {
   }, [top.data, type, range]);
 
   function generate() {
+    if (!type || !range) return;
     if (top.isError) {
       toast.add({ title: "Could not load your top.", type: "error" });
       return;
@@ -150,22 +137,22 @@ export function HomeScreen() {
     toast.add({ title: "Saved bunchify_image.png", type: "success" });
   }
 
-  const loading = profile.isPending || top.isPending;
+  const loadingTop = top.isFetching;
   const storyUrl = story.data?.url ?? null;
   const imageBroken = storyUrl !== null && brokenUrl === storyUrl;
   const showImage = storyUrl !== null && !imageBroken;
-  const showSkeleton = !showImage && story.isFetching;
+  const showSkeleton = story.isFetching;
+  const insufficientTop = Boolean(type && range && top.data && top.data.items.length < 5);
+  const readyToGenerate = Boolean(type && range);
   const previewStatus: { tone: "waiting" | "failed"; text: string } = imageBroken
     ? { tone: "failed", text: "Could not show your story." }
-    : (request && "skipped" in request) || story.error?.message === "insufficient"
+    : insufficientTop || story.error?.message === "insufficient"
       ? { tone: "failed", text: INSUFFICIENT_TOP }
       : story.isError
         ? { tone: "failed", text: "Could not make your story." }
         : top.isError
           ? { tone: "failed", text: "Could not load your top." }
-          : profile.isError
-            ? { tone: "failed", text: "Could not load your profile." }
-            : { tone: "waiting", text: "Loading your tops…" };
+          : { tone: "waiting", text: "Generate a story to preview it." };
 
   return (
     <Atmosphere>
@@ -174,10 +161,12 @@ export function HomeScreen() {
           <div
             role="region"
             aria-label="Story preview"
-            aria-busy={showSkeleton || loading}
+            aria-busy={showSkeleton}
             className="aspect-[828/1792] w-full overflow-hidden rounded-[18px] bg-black/40"
           >
-            {showImage ? (
+            {showSkeleton ? (
+              <Skeleton className="size-full rounded-[18px]" />
+            ) : showImage ? (
               <img
                 key={storyUrl}
                 src={storyUrl}
@@ -185,24 +174,22 @@ export function HomeScreen() {
                 className="story-arrive size-full object-cover"
                 onError={() => setBrokenUrl(storyUrl)}
               />
-            ) : showSkeleton ? (
-              <Skeleton className="size-full rounded-[18px]" />
             ) : (
               <StoryPreviewStatus tone={previewStatus.tone}>{previewStatus.text}</StoryPreviewStatus>
             )}
           </div>
         </div>
         <aside className="w-full max-w-[420px] rounded-[20px] border bg-card p-4 min-[900px]:max-w-[280px]">
-          {loading ? <p className="text-sm text-muted-foreground">Loading your tops…</p> : null}
           <FieldSet>
             <FieldGroup>
               <Field>
                 <FieldLabel>Type</FieldLabel>
                 <ToggleGroup
-                  value={[type]}
+                  value={type ? [type] : []}
                   onValueChange={(groupValue) => {
                     const next = groupValue[0];
                     if (next === "artists" || next === "tracks") setType(next);
+                    else setType(null);
                   }}
                   className="w-full"
                 >
@@ -213,12 +200,12 @@ export function HomeScreen() {
               <Field>
                 <FieldLabel>Range</FieldLabel>
                 <ToggleGroup
-                  value={[range]}
+                  value={range ? [range] : []}
                   onValueChange={(groupValue) => {
                     const next = groupValue[0];
                     if (next === "short_term" || next === "medium_term" || next === "long_term") {
                       setRange(next);
-                    }
+                    } else setRange(null);
                   }}
                   className="flex w-full flex-col"
                 >
@@ -226,7 +213,7 @@ export function HomeScreen() {
                   <ToggleGroupItem value="medium_term">Medium term</ToggleGroupItem>
                   <ToggleGroupItem value="long_term">Long term</ToggleGroupItem>
                 </ToggleGroup>
-                <FieldDescription>{RANGE_HELP[range]}</FieldDescription>
+                {range ? <FieldDescription>{RANGE_HELP[range]}</FieldDescription> : null}
               </Field>
               <Field>
                 <FieldLabel htmlFor="primary">Primary</FieldLabel>
@@ -250,7 +237,7 @@ export function HomeScreen() {
                 <FieldDescription>Darker colors can be hard to read.</FieldDescription>
               </Field>
               <div className="flex flex-col gap-2">
-                <Button onClick={generate} disabled={story.isFetching || loading}>
+                <Button onClick={generate} disabled={!readyToGenerate || story.isFetching || loadingTop}>
                   {story.isFetching ? "Making your story…" : "Generate"}
                 </Button>
                 <Button variant="outline" onClick={save} disabled={!story.data}>
