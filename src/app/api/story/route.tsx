@@ -1,18 +1,20 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { loadRobotoMono } from "@/lib/roboto-mono";
 import { HEX_COLOR, INSUFFICIENT_TOP, RANGE_PHRASE } from "@/lib/story-copy";
 import { StoryImage, storyRows } from "@/lib/story";
 import { getProfile, getTop, isTopRange, isTopType, SpotifyError } from "@/lib/spotify";
 
 export const runtime = "nodejs";
 
-let fontPromise: Promise<Buffer> | null = null;
+let fontPromise: Promise<ArrayBuffer> | null = null;
 
 function robotoMono() {
-  fontPromise ??= readFile(
-    join(process.cwd(), "node_modules/@fontsource/roboto-mono/files/roboto-mono-latin-500-normal.woff"),
-  );
+  fontPromise ??= loadRobotoMono().catch((error: unknown) => {
+    fontPromise = null;
+    throw error;
+  });
   return fontPromise;
 }
 
@@ -29,7 +31,7 @@ async function renderStory(input: {
   rows: ReturnType<typeof storyRows>;
   wordmark: string;
   spotifyMark: string;
-  font: Buffer;
+  font: ArrayBuffer;
 }) {
   const image = new ImageResponse(
     <StoryImage
