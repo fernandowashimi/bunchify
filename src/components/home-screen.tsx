@@ -1,13 +1,14 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { OctagonXIcon } from "lucide-react";
+import { MusicIcon, OctagonXIcon, UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Atmosphere } from "@/components/atmosphere";
 import { StoryFrame } from "@/components/story-frame";
 import { Button } from "@/components/ui/button";
-import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldSet, FieldTitle } from "@/components/ui/field";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -249,35 +250,64 @@ export function HomeScreen() {
               <Field>
                 <FieldLabel>Type</FieldLabel>
                 <ToggleGroup
+                  variant="segment"
+                  spacing={1}
                   value={type ? [type] : []}
                   onValueChange={(groupValue) => {
                     const next = groupValue[0];
                     if (next === "artists" || next === "tracks") setType(next);
                     else setType(null);
                   }}
-                  className="w-full"
                 >
-                  <ToggleGroupItem value="artists">Top artists</ToggleGroupItem>
-                  <ToggleGroupItem value="tracks">Top tracks</ToggleGroupItem>
+                  <ToggleGroupItem value="artists">
+                    <UserIcon data-icon="inline-start" />
+                    Top artists
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="tracks">
+                    <MusicIcon data-icon="inline-start" />
+                    Top tracks
+                  </ToggleGroupItem>
                 </ToggleGroup>
               </Field>
               <Field>
-                <FieldLabel>Range</FieldLabel>
-                <ToggleGroup
-                  value={range ? [range] : []}
-                  onValueChange={(groupValue) => {
-                    const next = groupValue[0];
+                <FieldLabel id="range-label">Range</FieldLabel>
+                <RadioGroup
+                  aria-labelledby="range-label"
+                  value={range ?? ""}
+                  onValueChange={(next) => {
                     if (next === "short_term" || next === "medium_term" || next === "long_term") {
                       setRange(next);
-                    } else setRange(null);
+                    }
                   }}
-                  className="flex w-full flex-col"
                 >
-                  <ToggleGroupItem value="short_term">Short term</ToggleGroupItem>
-                  <ToggleGroupItem value="medium_term">Medium term</ToggleGroupItem>
-                  <ToggleGroupItem value="long_term">Long term</ToggleGroupItem>
-                </ToggleGroup>
-                {range ? <FieldDescription>{RANGE_HELP[range]}</FieldDescription> : null}
+                  <FieldLabel>
+                    <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
+                      <RadioGroupItem value="short_term" />
+                      <FieldContent>
+                        <FieldTitle>Short term</FieldTitle>
+                        <FieldDescription>{RANGE_HELP.short_term}</FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                  <FieldLabel>
+                    <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
+                      <RadioGroupItem value="medium_term" />
+                      <FieldContent>
+                        <FieldTitle>Medium term</FieldTitle>
+                        <FieldDescription>{RANGE_HELP.medium_term}</FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                  <FieldLabel>
+                    <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
+                      <RadioGroupItem value="long_term" />
+                      <FieldContent>
+                        <FieldTitle>Long term</FieldTitle>
+                        <FieldDescription>{RANGE_HELP.long_term}</FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                </RadioGroup>
               </Field>
               <Field>
                 <FieldLabel htmlFor="primary">Primary</FieldLabel>

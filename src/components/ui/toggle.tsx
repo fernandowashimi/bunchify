@@ -11,6 +11,7 @@ const toggleVariants = cva(
       variant: {
         default: "bg-transparent",
         outline: "border border-input bg-transparent hover:bg-muted",
+        segment: "",
       },
       size: {
         default:
@@ -19,6 +20,13 @@ const toggleVariants = cva(
         lg: "h-9 min-w-9 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
       },
     },
+    compoundVariants: [
+      {
+        variant: "segment",
+        class:
+          "relative z-0 h-8 flex-1 gap-1.5 bg-transparent px-3 text-muted-foreground hover:bg-transparent hover:text-foreground aria-pressed:bg-transparent hover:aria-pressed:bg-transparent focus:z-0 focus-visible:z-20 focus-visible:text-foreground has-data-[icon=inline-start]:pl-3",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
@@ -41,4 +49,7 @@ function Toggle({
   )
 }
 
-export { Toggle, toggleVariants }
+const segmentIndicatorItemClass =
+  "inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 px-3 text-sm font-medium whitespace-nowrap has-data-[icon=inline-start]:pl-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+
+export { Toggle, segmentIndicatorItemClass, toggleVariants }

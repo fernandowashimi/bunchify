@@ -22,7 +22,7 @@ async function spotifyReads(page: Page) {
 
 async function generateStory(page: Page) {
   await page.getByRole("button", { name: "Top artists" }).click();
-  await page.getByRole("button", { name: "Short term" }).click();
+  await page.getByRole("radio", { name: "Short term" }).click();
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByRole("img", { name: "Story preview" })).toBeVisible({ timeout: 30_000 });
 }
@@ -46,7 +46,7 @@ test("logged-out home sends the listener to Authorize", async ({ page }) => {
 test("a stubbed Spotify callback opens Home without exposing the access token", async ({ page }) => {
   await connect(page);
   await expect(page.getByRole("button", { name: "Top artists" })).toHaveAttribute("aria-pressed", "false");
-  await expect(page.getByRole("button", { name: "Short term" })).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("radio", { name: "Short term" })).not.toBeChecked();
   await expect(page.getByLabel("Primary")).toHaveValue("#ee1f9d");
   await expect(page.getByLabel("Secondary")).toHaveValue("#dbfa84");
   await expect(page.getByRole("button", { name: "Generate" })).toBeDisabled();
@@ -81,7 +81,7 @@ test("the preview skeleton shows only while a story is generating", async ({ pag
   await expect(preview.locator("[data-slot=skeleton]")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Top artists" }).click();
-  await page.getByRole("button", { name: "Short term" }).click();
+  await page.getByRole("radio", { name: "Short term" }).click();
   await expect(preview.locator("[data-slot=skeleton]")).toHaveCount(0);
   await expect(preview.getByText("Generate a story to preview it.")).toBeVisible();
   await expect(page.getByText("Loading your tops…")).toHaveCount(0);
@@ -106,7 +106,7 @@ test("changing the top and generating updates the story preview", async ({ page 
   expect(storyRequests).toEqual([]);
 
   await page.getByRole("button", { name: "Top tracks" }).click();
-  await page.getByRole("button", { name: "Medium term" }).click();
+  await page.getByRole("radio", { name: "Medium term" }).click();
   await page.getByRole("button", { name: "Generate" }).click();
 
   await expect.poll(async () => frame.innerHTML(), { timeout: 30_000 }).not.toBe(before);
@@ -148,7 +148,7 @@ test("a top with fewer than five items shows the failure and does not download",
   await page.goto("/");
   await page.getByRole("button", { name: "Connect Spotify" }).click();
   await page.getByRole("button", { name: "Top artists" }).click();
-  await page.getByRole("button", { name: "Short term" }).click();
+  await page.getByRole("radio", { name: "Short term" }).click();
   const preview = page.getByRole("region", { name: "Story preview" });
   await expect(page.locator("[data-slot=toast]")).toContainText("You don't have enough data to proceed.");
   await expect(preview.getByText("You don't have enough data to proceed.")).toBeVisible();
@@ -168,7 +168,7 @@ test("a failed story shows a status in the preview instead of a skeleton", async
   await page.goto("/");
   await page.getByRole("button", { name: "Connect Spotify" }).click();
   await page.getByRole("button", { name: "Top artists" }).click();
-  await page.getByRole("button", { name: "Short term" }).click();
+  await page.getByRole("radio", { name: "Short term" }).click();
   await page.getByRole("button", { name: "Generate" }).click();
 
   const preview = page.getByRole("region", { name: "Story preview" });
