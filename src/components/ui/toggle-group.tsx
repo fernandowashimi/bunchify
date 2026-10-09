@@ -20,10 +20,15 @@ const ToggleGroupContext = React.createContext<
   orientation: "horizontal",
 })
 
-function segmentClip(index: number, count: number) {
+function segmentInsets(index: number, count: number) {
   const span = `(100% - 2 * var(--segment-pad) - ${count - 1} * var(--segment-gap)) / ${count}`
   const left = `calc(var(--segment-pad) + ${index} * ((${span}) + var(--segment-gap)))`
   const right = `calc(var(--segment-pad) + ${count - 1 - index} * ((${span}) + var(--segment-gap)))`
+  return { left, right }
+}
+
+function segmentClip(index: number, count: number) {
+  const { left, right } = segmentInsets(index, count)
   return `inset(var(--segment-pad) ${right} var(--segment-pad) ${left} round var(--segment-radius))`
 }
 
@@ -45,6 +50,7 @@ function SegmentIndicator({
   const previous = React.useRef<number | null>(null)
   const slide = previous.current !== null && index >= 0
   const shown = index >= 0 ? index : (previous.current ?? 0)
+  const insets = segmentInsets(shown, count)
 
   React.useEffect(() => {
     previous.current = index >= 0 ? index : null
@@ -58,7 +64,7 @@ function SegmentIndicator({
       inert
       data-segment-indicator=""
       className={cn(
-        "pointer-events-none absolute inset-0 z-1 flex items-center gap-[--spacing(var(--gap))] bg-muted p-1 text-foreground",
+        "pointer-events-none absolute inset-0 z-1 flex items-center gap-[--spacing(var(--gap))] bg-card bg-[linear-gradient(oklab(from_var(--primary)_l_a_b/0.1),oklab(from_var(--primary)_l_a_b/0.1))] p-1 text-foreground",
         index < 0 ? "opacity-0" : "opacity-100",
         slide
           ? "transition-[clip-path,opacity] duration-[250ms] ease-[var(--ease-in-out)]"
@@ -67,6 +73,22 @@ function SegmentIndicator({
       )}
       style={{ clipPath: segmentClip(shown, count) }}
     >
+      <span
+        aria-hidden
+        className={cn(
+          "absolute rounded-[var(--segment-radius)] border border-primary/20",
+          slide
+            ? "transition-[left,right,top,bottom] duration-[250ms] ease-[var(--ease-in-out)]"
+            : "transition-none",
+          "motion-reduce:transition-none"
+        )}
+        style={{
+          top: "var(--segment-pad)",
+          bottom: "var(--segment-pad)",
+          left: insets.left,
+          right: insets.right,
+        }}
+      />
       {entries.map((entry) => (
         <span key={entry.props.value} className={segmentIndicatorItemClass}>
           {duplicateContent(entry.props.children)}
