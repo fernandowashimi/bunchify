@@ -2,27 +2,11 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { HEX_COLOR, INSUFFICIENT_TOP, RANGE_PHRASE } from "@/lib/story-copy";
-import { loadGoogleFont } from "@/lib/story-fonts";
-import { STORY_HEIGHT, STORY_WIDTH, StoryImage, storyRows } from "@/lib/story";
-import { getProfile, getTop, isTopRange, isTopType, SpotifyError, storyImage } from "@/lib/spotify";
+import { storyFontOptions, storyFonts } from "@/lib/story-fonts";
+import { STORY_HEIGHT, STORY_WIDTH, StoryImage, storyImage, storyRows } from "@/lib/story";
+import { getProfile, getTop, isTopRange, isTopType, SpotifyError } from "@/lib/spotify";
 
 export const runtime = "nodejs";
-
-let fontsPromise: Promise<{ syne: ArrayBuffer; dmSans: ArrayBuffer; numbers: ArrayBuffer }> | null = null;
-
-function storyFonts() {
-  fontsPromise ??= Promise.all([
-    loadGoogleFont("Syne", 800),
-    loadGoogleFont("DM Sans", 500),
-    loadGoogleFont("Instrument Serif", 400, fetch, true),
-  ])
-    .then(([syne, dmSans, numbers]) => ({ syne, dmSans, numbers }))
-    .catch((error: unknown) => {
-      fontsPromise = null;
-      throw error;
-    });
-  return fontsPromise;
-}
 
 function dataUrl(bytes: Buffer, mime: string) {
   return `data:${mime};base64,${bytes.toString("base64")}`;
@@ -55,11 +39,7 @@ async function renderStory(input: {
     {
       width: STORY_WIDTH,
       height: STORY_HEIGHT,
-      fonts: [
-        { name: "Syne", data: input.syne, weight: 800, style: "normal" },
-        { name: "DM Sans", data: input.dmSans, weight: 500, style: "normal" },
-        { name: "Instrument Serif", data: input.numbers, weight: 400, style: "italic" },
-      ],
+      fonts: storyFontOptions({ syne: input.syne, dmSans: input.dmSans, numbers: input.numbers }),
     },
   );
 

@@ -1,5 +1,16 @@
 import type { TopItem, TopType } from "@/lib/spotify";
-import { storyImage } from "@/lib/spotify";
+
+type StoryArt = { url?: string; width?: number; height?: number };
+
+export function storyImage(images: StoryArt[] | undefined) {
+  const list = images ?? [];
+  const mid = list[1]?.url;
+  if (mid) return mid;
+  const largest = [...list]
+    .filter((image) => image.url)
+    .sort((a, b) => (b.width ?? 0) - (a.width ?? 0))[0];
+  return largest?.url ?? null;
+}
 
 export const STORY_WIDTH = 1080;
 export const STORY_HEIGHT = 1920;
@@ -98,6 +109,7 @@ export function StoryImage({
           width: STORY_WIDTH,
           height: INNER_HEIGHT,
           flexShrink: 0,
+          boxSizing: "border-box",
           paddingLeft: SAFE_SIDE,
           paddingRight: SAFE_SIDE,
         }}
@@ -199,6 +211,7 @@ export function StoryImage({
                   width: CONTENT_WIDTH,
                   height: ROW_CARD,
                   alignItems: "center",
+                  boxSizing: "border-box",
                   background: "rgba(255,255,255,0.08)",
                   border: "1px solid rgba(255,255,255,0.18)",
                   borderRadius: 22,

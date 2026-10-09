@@ -158,6 +158,12 @@
   animation: story-spring 420ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+.story-frame svg {
+  display: block;
+  width: 1080px;
+  height: 1920px;
+}
+
 @keyframes grid-drift {
   from {
     transform: translate3d(0, 0, 0);

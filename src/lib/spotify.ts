@@ -120,16 +120,6 @@ export async function getTop(type: "artists" | "tracks", range: string): Promise
   });
 }
 
-export function storyImage(images: Image[] | undefined) {
-  const list = images ?? [];
-  const mid = list[1]?.url;
-  if (mid) return mid;
-  const largest = [...list]
-    .filter((image) => image.url)
-    .sort((a, b) => (b.width ?? 0) - (a.width ?? 0))[0];
-  return largest?.url ?? null;
-}
-
 export const TOP_TYPES = ["artists", "tracks"] as const;
 export const TOP_RANGES = ["short_term", "medium_term", "long_term"] as const;
 

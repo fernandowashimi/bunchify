@@ -21,3 +21,33 @@ export async function loadGoogleFont(
   if (!fontResponse.ok) throw new Error(`Could not load ${family}.`);
   return fontResponse.arrayBuffer();
 }
+
+export type StoryFontSet = {
+  syne: ArrayBuffer;
+  dmSans: ArrayBuffer;
+  numbers: ArrayBuffer;
+};
+
+let fontsPromise: Promise<StoryFontSet> | null = null;
+
+export function storyFonts() {
+  fontsPromise ??= Promise.all([
+    loadGoogleFont("Syne", 800),
+    loadGoogleFont("DM Sans", 500),
+    loadGoogleFont("Instrument Serif", 400, fetch, true),
+  ])
+    .then(([syne, dmSans, numbers]) => ({ syne, dmSans, numbers }))
+    .catch((error: unknown) => {
+      fontsPromise = null;
+      throw error;
+    });
+  return fontsPromise;
+}
+
+export function storyFontOptions(fonts: StoryFontSet) {
+  return [
+    { name: "Syne", data: fonts.syne, weight: 800 as const, style: "normal" as const },
+    { name: "DM Sans", data: fonts.dmSans, weight: 500 as const, style: "normal" as const },
+    { name: "Instrument Serif", data: fonts.numbers, weight: 400 as const, style: "italic" as const },
+  ];
+}

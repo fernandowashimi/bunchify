@@ -33,6 +33,7 @@ export default defineConfig({
         SPOTIFY_REDIRECT_URI: "http://127.0.0.1:3100/api/auth/callback",
         SPOTIFY_ACCOUNTS_URL: stubOrigin,
         SPOTIFY_API_URL: stubOrigin,
+        NEXT_DIST_DIR: ".next-e2e",
       },
     },
   ],

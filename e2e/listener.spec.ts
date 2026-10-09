@@ -72,7 +72,7 @@ test("the preview skeleton shows only while a story is generating", async ({ pag
     await new Promise((resolve) => setTimeout(resolve, 800));
     await route.continue();
   });
-  await page.route("**/api/story**", async (route) => {
+  await page.route("**/api/me", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 800));
     await route.continue();
   });
@@ -95,16 +95,27 @@ test("the preview skeleton shows only while a story is generating", async ({ pag
 });
 
 test("changing the top and generating updates the story preview", async ({ page }) => {
+  const storyRequests: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/story") storyRequests.push(request.url());
+  });
   await connect(page);
   await generateStory(page);
-  const preview = page.getByRole("img", { name: "Story preview" });
-  const before = await preview.getAttribute("src");
+  const frame = page.getByRole("img", { name: "Story preview" }).locator(".story-frame");
+  const before = await frame.innerHTML();
+  expect(storyRequests).toEqual([]);
 
   await page.getByRole("button", { name: "Top tracks" }).click();
   await page.getByRole("button", { name: "Medium term" }).click();
   await page.getByRole("button", { name: "Generate" }).click();
 
-  await expect.poll(async () => preview.getAttribute("src"), { timeout: 30_000 }).not.toBe(before);
+  await expect.poll(async () => frame.innerHTML(), { timeout: 30_000 }).not.toBe(before);
+  expect(storyRequests).toEqual([]);
+
+  const colored = await frame.innerHTML();
+  await page.getByLabel("Primary").fill("#00aa00");
+  await expect.poll(async () => frame.innerHTML(), { timeout: 30_000 }).not.toBe(colored);
+  expect(storyRequests).toEqual([]);
 
   const requests = await spotifyReads(page);
   expect(
@@ -147,11 +158,11 @@ test("a top with fewer than five items shows the failure and does not download",
 });
 
 test("a failed story shows a status in the preview instead of a skeleton", async ({ page }) => {
-  await page.route("**/api/story**", (route) =>
+  await page.route("**/api/story-fonts", (route) =>
     route.fulfill({
       status: 500,
       contentType: "application/json",
-      body: JSON.stringify({ error: "Could not make your story." }),
+      body: JSON.stringify({ error: "Could not load fonts." }),
     }),
   );
   await page.goto("/");
