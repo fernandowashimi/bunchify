@@ -35,8 +35,7 @@ async function renderStory(input: {
   primary: string;
   secondary: string;
   rows: ReturnType<typeof storyRows>;
-  wordmark: string;
-  spotifyMark: string;
+  spotifyLogo: string;
   avatar: string | null;
   syne: ArrayBuffer;
   dmSans: ArrayBuffer;
@@ -50,8 +49,7 @@ async function renderStory(input: {
       primary={input.primary}
       secondary={input.secondary}
       rows={input.rows}
-      wordmark={input.wordmark}
-      spotifyMark={input.spotifyMark}
+      spotifyLogo={input.spotifyLogo}
       avatar={input.avatar}
     />,
     {
@@ -89,10 +87,9 @@ export async function GET(request: Request) {
       return Response.json({ error: INSUFFICIENT_TOP }, { status: 422 });
     }
 
-    const [{ syne, dmSans, numbers }, wordmark, spotifyMark] = await Promise.all([
+    const [{ syne, dmSans, numbers }, spotifyLogo] = await Promise.all([
       storyFonts(),
-      readFile(join(process.cwd(), "public/Bunchify_Typo_White.svg")),
-      readFile(join(process.cwd(), "public/spotify-mark.svg")),
+      readFile(join(process.cwd(), "public/spotify-logo-white.png")),
     ]);
 
     const body = await renderStory({
@@ -102,8 +99,7 @@ export async function GET(request: Request) {
       primary,
       secondary,
       rows: storyRows(type, items),
-      wordmark: dataUrl(wordmark, "image/svg+xml"),
-      spotifyMark: dataUrl(spotifyMark, "image/svg+xml"),
+      spotifyLogo: dataUrl(spotifyLogo, "image/png"),
       avatar: storyImage(profile.images),
       syne,
       dmSans,

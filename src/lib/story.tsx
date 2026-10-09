@@ -11,6 +11,8 @@ const INNER_HEIGHT = STORY_HEIGHT - SAFE_TOP - SAFE_BOTTOM;
 const CONTENT_WIDTH = STORY_WIDTH - SAFE_SIDE * 2;
 
 const HEADER_HEIGHT = 84;
+const SPOTIFY_LOGO_WIDTH = 204;
+const SPOTIFY_LOGO_HEIGHT = 56;
 const GAP_AFTER_NAME = 36;
 const TITLE_HEIGHT = 200;
 const GAP_AFTER_TITLE = 40;
@@ -63,8 +65,7 @@ export function StoryImage({
   primary,
   secondary,
   rows,
-  wordmark,
-  spotifyMark,
+  spotifyLogo,
   avatar,
 }: {
   kind: "ARTISTS" | "TRACKS";
@@ -73,8 +74,7 @@ export function StoryImage({
   primary: string;
   secondary: string;
   rows: StoryRow[];
-  wordmark: string;
-  spotifyMark: string;
+  spotifyLogo: string;
   avatar: string | null;
 }) {
   const kindSize = kind.length > 6 ? 100 : 118;
@@ -132,9 +132,9 @@ export function StoryImage({
                 }}
               />
             )}
-            <div style={clip(CONTENT_WIDTH - 68 - 16 - 48 - 20, 34, "#ffffff")}>{displayName}</div>
+            <div style={clip(CONTENT_WIDTH - 68 - 16 - SPOTIFY_LOGO_WIDTH - 32, 34, "#ffffff")}>{displayName}</div>
           </div>
-          <img src={spotifyMark} width={48} height={48} alt="" />
+          <img src={spotifyLogo} width={SPOTIFY_LOGO_WIDTH} height={SPOTIFY_LOGO_HEIGHT} alt="" />
         </div>
         <div style={{ display: "flex", height: GAP_AFTER_NAME, flexShrink: 0 }} />
         <div
@@ -260,7 +260,16 @@ export function StoryImage({
             alignItems: "flex-end",
           }}
         >
-          <img src={wordmark} width={220} height={40} alt="" />
+          <div
+            style={{
+              display: "flex",
+              color: "rgba(255,255,255,0.82)",
+              fontSize: 26,
+              lineHeight: "26px",
+            }}
+          >
+            made using bunchify.vercel.app
+          </div>
         </div>
       </div>
       <div style={{ display: "flex", width: STORY_WIDTH, height: SAFE_BOTTOM, flexShrink: 0 }} />
