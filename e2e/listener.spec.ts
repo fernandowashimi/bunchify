@@ -114,7 +114,7 @@ test("changing the top and generating updates the story preview", async ({ page 
   ).toBe(true);
 });
 
-test("save downloads a story PNG at 828 by 1792", async ({ page }) => {
+test("save downloads a story PNG at 1080 by 1920", async ({ page }) => {
   await connect(page);
   await generateStory(page);
   const [download] = await Promise.all([
@@ -127,8 +127,8 @@ test("save downloads a story PNG at 828 by 1792", async ({ page }) => {
   expect(path).toBeTruthy();
   const bytes = await readFile(path!);
   expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
-  expect(bytes.readUInt32BE(16)).toBe(828);
-  expect(bytes.readUInt32BE(20)).toBe(1792);
+  expect(bytes.readUInt32BE(16)).toBe(1080);
+  expect(bytes.readUInt32BE(20)).toBe(1920);
   await expect(page.getByText("Saved bunchify_image.png")).toBeVisible();
 });
 

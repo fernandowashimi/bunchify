@@ -1,21 +1,27 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { loadRobotoMono } from "@/lib/roboto-mono";
 import { HEX_COLOR, INSUFFICIENT_TOP, RANGE_PHRASE } from "@/lib/story-copy";
-import { StoryImage, storyRows } from "@/lib/story";
-import { getProfile, getTop, isTopRange, isTopType, SpotifyError } from "@/lib/spotify";
+import { loadGoogleFont } from "@/lib/story-fonts";
+import { STORY_HEIGHT, STORY_WIDTH, StoryImage, storyRows } from "@/lib/story";
+import { getProfile, getTop, isTopRange, isTopType, SpotifyError, storyImage } from "@/lib/spotify";
 
 export const runtime = "nodejs";
 
-let fontPromise: Promise<ArrayBuffer> | null = null;
+let fontsPromise: Promise<{ syne: ArrayBuffer; dmSans: ArrayBuffer; numbers: ArrayBuffer }> | null = null;
 
-function robotoMono() {
-  fontPromise ??= loadRobotoMono().catch((error: unknown) => {
-    fontPromise = null;
-    throw error;
-  });
-  return fontPromise;
+function storyFonts() {
+  fontsPromise ??= Promise.all([
+    loadGoogleFont("Syne", 800),
+    loadGoogleFont("DM Sans", 500),
+    loadGoogleFont("Instrument Serif", 400, fetch, true),
+  ])
+    .then(([syne, dmSans, numbers]) => ({ syne, dmSans, numbers }))
+    .catch((error: unknown) => {
+      fontsPromise = null;
+      throw error;
+    });
+  return fontsPromise;
 }
 
 function dataUrl(bytes: Buffer, mime: string) {
@@ -31,7 +37,10 @@ async function renderStory(input: {
   rows: ReturnType<typeof storyRows>;
   wordmark: string;
   spotifyMark: string;
-  font: ArrayBuffer;
+  avatar: string | null;
+  syne: ArrayBuffer;
+  dmSans: ArrayBuffer;
+  numbers: ArrayBuffer;
 }) {
   const image = new ImageResponse(
     <StoryImage
@@ -43,11 +52,16 @@ async function renderStory(input: {
       rows={input.rows}
       wordmark={input.wordmark}
       spotifyMark={input.spotifyMark}
+      avatar={input.avatar}
     />,
     {
-      width: 828,
-      height: 1792,
-      fonts: [{ name: "Roboto Mono", data: input.font, weight: 500, style: "normal" }],
+      width: STORY_WIDTH,
+      height: STORY_HEIGHT,
+      fonts: [
+        { name: "Syne", data: input.syne, weight: 800, style: "normal" },
+        { name: "DM Sans", data: input.dmSans, weight: 500, style: "normal" },
+        { name: "Instrument Serif", data: input.numbers, weight: 400, style: "italic" },
+      ],
     },
   );
 
@@ -75,8 +89,8 @@ export async function GET(request: Request) {
       return Response.json({ error: INSUFFICIENT_TOP }, { status: 422 });
     }
 
-    const [font, wordmark, spotifyMark] = await Promise.all([
-      robotoMono(),
+    const [{ syne, dmSans, numbers }, wordmark, spotifyMark] = await Promise.all([
+      storyFonts(),
       readFile(join(process.cwd(), "public/Bunchify_Typo_White.svg")),
       readFile(join(process.cwd(), "public/spotify-mark.svg")),
     ]);
@@ -90,7 +104,10 @@ export async function GET(request: Request) {
       rows: storyRows(type, items),
       wordmark: dataUrl(wordmark, "image/svg+xml"),
       spotifyMark: dataUrl(spotifyMark, "image/svg+xml"),
-      font,
+      avatar: storyImage(profile.images),
+      syne,
+      dmSans,
+      numbers,
     });
     return new Response(body, {
       headers: {

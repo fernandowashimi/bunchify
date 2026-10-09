@@ -162,7 +162,7 @@ export function HomeScreen() {
             role="region"
             aria-label="Story preview"
             aria-busy={showSkeleton}
-            className="aspect-[828/1792] w-full overflow-hidden rounded-[18px] bg-black/40"
+            className="aspect-[9/16] w-full overflow-hidden rounded-[18px] bg-black/40"
           >
             {showSkeleton ? (
               <Skeleton className="size-full rounded-[18px]" />
