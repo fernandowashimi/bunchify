@@ -55,10 +55,12 @@ function StoryChrome({
   displayName,
   avatarUrl,
   sticker,
+  stickerUrl,
 }: {
   displayName: string;
   avatarUrl: string | null;
   sticker: string | null;
+  stickerUrl: string | null;
 }) {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 font-sans text-white">
@@ -101,11 +103,24 @@ function StoryChrome({
                   <span className="shrink-0 text-[3cqw] leading-none text-white/65">1 d</span>
                 </div>
                 {sticker ? (
-                  <div className="flex min-w-0 items-center gap-[1cqw] text-[2.7cqw] leading-none text-white/95">
-                    <Equalizer className="size-[2.8cqw] shrink-0" />
-                    <span className="truncate">{sticker}</span>
-                    <span className="shrink-0 text-white/80">›</span>
-                  </div>
+                  stickerUrl ? (
+                    <a
+                      href={stickerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="pointer-events-auto flex min-w-0 items-center gap-[1cqw] text-[2.7cqw] leading-none text-white/95 hover:underline"
+                    >
+                      <Equalizer className="size-[2.8cqw] shrink-0" />
+                      <span className="truncate">{sticker}</span>
+                      <span className="shrink-0 text-white/80">›</span>
+                    </a>
+                  ) : (
+                    <div className="flex min-w-0 items-center gap-[1cqw] text-[2.7cqw] leading-none text-white/95">
+                      <Equalizer className="size-[2.8cqw] shrink-0" />
+                      <span className="truncate">{sticker}</span>
+                      <span className="shrink-0 text-white/80">›</span>
+                    </div>
+                  )
                 ) : null}
               </div>
             </div>
@@ -136,11 +151,13 @@ export function StoryFrame({
   displayName,
   avatarUrl,
   sticker,
+  stickerUrl = null,
 }: {
   svg: string;
   displayName: string;
   avatarUrl: string | null;
   sticker: string | null;
+  stickerUrl?: string | null;
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -162,11 +179,12 @@ export function StoryFrame({
     <div
       ref={frame}
       className="story-arrive relative size-full overflow-hidden [container-type:inline-size]"
-      role="img"
       aria-label="Story preview"
     >
       <div
         className="story-frame absolute top-0 left-0"
+        role="img"
+        aria-label="Story preview"
         style={{
           width: STORY_WIDTH,
           height: STORY_HEIGHT,
@@ -175,7 +193,12 @@ export function StoryFrame({
         }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
-      <StoryChrome displayName={displayName} avatarUrl={avatarUrl} sticker={sticker} />
+      <StoryChrome
+        displayName={displayName}
+        avatarUrl={avatarUrl}
+        sticker={sticker}
+        stickerUrl={stickerUrl}
+      />
     </div>
   );
 }

@@ -104,7 +104,7 @@ test("changing the top and generating updates the story preview", async ({ page 
   });
   await connect(page);
   await generateStory(page);
-  const frame = page.getByRole("img", { name: "Story preview" }).locator(".story-frame");
+  const frame = page.getByRole("img", { name: "Story preview" });
   const before = await frame.innerHTML();
   expect(storyRequests).toEqual([]);
 
@@ -126,6 +126,24 @@ test("changing the top and generating updates the story preview", async ({ page 
       (entry) => entry.includes("/v1/me/top/tracks") && entry.includes("time_range=medium_term"),
     ),
   ).toBe(true);
+});
+
+test("generated stories attribute Spotify metadata with logo and content links", async ({ page }) => {
+  await connect(page);
+  await generateStory(page);
+
+  await page.getByRole("button", { name: "Attribution" }).click();
+  const attribution = page.getByRole("region", { name: "Spotify attribution" });
+  await expect(attribution.getByRole("img", { name: "Spotify" })).toBeVisible();
+  await expect(page.getByText("Content from Spotify. Listen on Spotify:")).toBeVisible();
+  await expect(attribution.getByRole("link", { name: "Neon Harbor" })).toHaveAttribute(
+    "href",
+    "https://open.spotify.com/artist/demo1",
+  );
+  await expect(attribution.getByRole("link", { name: "Glass Atlas" })).toHaveAttribute(
+    "href",
+    "https://open.spotify.com/artist/demo2",
+  );
 });
 
 test("save downloads a story PNG at 1080 by 1920", async ({ page }) => {

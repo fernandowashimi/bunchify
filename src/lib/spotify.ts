@@ -28,7 +28,21 @@ export type TopItem = {
   name: string;
   artist?: string;
   images: Image[];
+  /** Link to this artist or track on Spotify (required for metadata attribution). */
+  url: string | null;
 };
+
+export function spotifyContentUrl(raw: string | undefined): string | null {
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:") return null;
+    if (url.hostname !== "open.spotify.com") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
 
 function rethrowSession(error: unknown): never {
   if (error instanceof SessionError) {
@@ -102,20 +116,24 @@ export async function getTop(type: "artists" | "tracks", range: string): Promise
       images?: Image[];
       artists?: Array<{ name?: string }>;
       album?: { images?: Image[] };
+      external_urls?: { spotify?: string };
     }>;
   };
 
   return (data.items ?? []).map((item) => {
+    const url = spotifyContentUrl(item.external_urls?.spotify);
     if (type === "tracks") {
       return {
         name: item.name ?? "",
         artist: item.artists?.[0]?.name ?? "",
         images: item.album?.images ?? [],
+        url,
       };
     }
     return {
       name: item.name ?? "",
       images: item.images ?? [],
+      url,
     };
   });
 }

@@ -14,7 +14,7 @@
     "lint": "eslint",
     "test": "playwright test",
     "typecheck": "tsc --noEmit",
-    "test:unit": "tsx --test src/lib/session.test.ts src/lib/roboto-mono.test.ts src/lib/story-image-url.test.ts"
+    "test:unit": "tsx --test src/lib/session.test.ts src/lib/roboto-mono.test.ts src/lib/story-image-url.test.ts src/lib/spotify-content-url.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",

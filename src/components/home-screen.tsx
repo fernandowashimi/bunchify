@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   DownloadIcon,
+  ExternalLinkIcon,
   Loader2Icon,
   MusicIcon,
   OctagonXIcon,
@@ -15,6 +16,14 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Atmosphere } from "@/components/atmosphere";
 import { StoryFrame } from "@/components/story-frame";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
@@ -125,6 +134,8 @@ function StoryPreviewStatus({ tone, children }: { tone: "waiting" | "failed"; ch
   );
 }
 
+type AttributionItem = { name: string; url: string };
+
 type StoryControlsProps = {
   type: TopType | null;
   range: TopRange | null;
@@ -142,6 +153,56 @@ type StoryControlsProps = {
   onShare: () => void;
   onSave: () => void;
 };
+
+function SpotifyAttribution({ items }: { items: AttributionItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <Dialog>
+      <DialogTrigger
+        render={
+          <button
+            type="button"
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          />
+        }
+      >
+        Attribution
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Attribution</DialogTitle>
+          <DialogDescription>Content from Spotify. Listen on Spotify:</DialogDescription>
+        </DialogHeader>
+        <div role="region" aria-label="Spotify attribution" className="flex flex-col gap-3">
+          <a
+            href="https://open.spotify.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-fit items-center"
+          >
+            <img src="/spotify-logo-white.png" alt="Spotify" className="h-5 w-auto opacity-90" />
+          </a>
+          <ul className="flex flex-col gap-1.5">
+            {items.map((item) => (
+              <li key={item.url}>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-foreground underline-offset-2 hover:underline"
+                >
+                  <span>{item.name}</span>
+                  <ExternalLinkIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                  <span className="sr-only">(opens in a new tab)</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function StoryControls({
   type,
@@ -465,6 +526,10 @@ export function HomeScreen() {
         ? { tone: "failed", text: "Could not load your top." }
         : { tone: "waiting", text: PREVIEW_EMPTY };
 
+  const attribution: AttributionItem[] = (previewItems?.items ?? [])
+    .filter((item): item is TopItem & { url: string } => Boolean(item.url))
+    .map((item) => ({ name: item.name, url: item.url }));
+
   const controlProps: StoryControlsProps = {
     type,
     range,
@@ -486,12 +551,12 @@ export function HomeScreen() {
   return (
     <Atmosphere>
       <main className="mx-auto flex h-svh w-full max-w-5xl flex-col items-center overflow-hidden px-5 pt-6 pb-[88px] min-[900px]:h-auto min-[900px]:min-h-svh min-[900px]:flex-row min-[900px]:items-center min-[900px]:justify-center min-[900px]:gap-6 min-[900px]:overflow-visible min-[900px]:py-8 min-[900px]:pb-8">
-        <div className="flex min-h-0 w-full max-w-[400px] flex-1 items-center justify-center min-[900px]:flex-none">
+        <div className="flex min-h-0 w-full max-w-[400px] flex-1 flex-col items-center justify-center gap-2 min-[900px]:flex-none">
           <div
             role="region"
             aria-label="Story preview"
             aria-busy={showSkeleton}
-            className="aspect-[9/16] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[18px] bg-black/40 min-[900px]:h-auto min-[900px]:w-full"
+            className="aspect-[9/16] min-h-0 w-auto max-w-full flex-1 overflow-hidden rounded-[18px] bg-black/40 min-[900px]:h-auto min-[900px]:w-full min-[900px]:flex-none"
           >
             {showSkeleton ? (
               <Skeleton className="size-full rounded-[18px]" />
@@ -501,11 +566,13 @@ export function HomeScreen() {
                 displayName={profile.data?.displayName ?? ""}
                 avatarUrl={storyImage(profile.data?.images)}
                 sticker={story.data.sticker}
+                stickerUrl={attribution[0]?.url ?? null}
               />
             ) : (
               <StoryPreviewStatus tone={previewStatus.tone}>{previewStatus.text}</StoryPreviewStatus>
             )}
           </div>
+          <SpotifyAttribution items={attribution} />
         </div>
         <aside className="hidden w-full max-w-[280px] rounded-[20px] border bg-card p-4 min-[900px]:block">
           <div className="flex flex-col gap-0.5 pb-4">
