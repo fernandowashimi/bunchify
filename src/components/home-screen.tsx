@@ -12,6 +12,7 @@ import {
   UserIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { useEffect, useId, useRef, useState } from "react";
 import { Atmosphere } from "@/components/atmosphere";
 import { StoryFrame } from "@/components/story-frame";
@@ -329,7 +330,14 @@ function StoryControls({
             <DownloadIcon data-icon="inline-start" />
             Save image
           </Button>
-          <Button variant="ghost" render={<a href="/api/auth/logout" />} nativeButton={false}>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              posthog.capture("listener_logged_out");
+              posthog.reset();
+              window.location.href = "/api/auth/logout";
+            }}
+          >
             Log out
           </Button>
         </div>
@@ -369,6 +377,19 @@ export function HomeScreen() {
     retry: false,
     queryFn: () => readJson<ListenerProfile>("/api/me"),
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    readJson<ListenerProfile>("/api/me")
+      .then((me) => {
+        if (cancelled || !me.id) return;
+        posthog.identify(me.id);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const previewRequest = preview;
   const previewMatches =

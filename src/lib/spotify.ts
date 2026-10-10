@@ -20,6 +20,7 @@ type TokenResponse = {
 type Image = { url?: string; width?: number; height?: number };
 
 export type ListenerProfile = {
+  id: string;
   displayName: string;
   images: Image[];
 };
@@ -101,8 +102,13 @@ export async function exchangeCode(code: string, verifier: string) {
 
 export async function getProfile(): Promise<ListenerProfile> {
   const response = await spotifyFetch("/v1/me");
-  const data = (await response.json()) as { display_name?: string; images?: Image[] };
+  const data = (await response.json()) as {
+    id?: string;
+    display_name?: string;
+    images?: Image[];
+  };
   return {
+    id: data.id ?? "",
     displayName: data.display_name ?? "",
     images: data.images ?? [],
   };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import posthog from "posthog-js";
 import { Button } from "@/components/ui/button";
 import { Atmosphere } from "@/components/atmosphere";
 import { toast } from "@/components/ui/toast";
@@ -38,6 +39,7 @@ export function AuthorizeScreen({ error }: { error?: string }) {
               nativeButton={false}
               render={<a href="/api/auth/login" />}
               className="h-11 px-7 text-base"
+              onClick={() => posthog.capture("authorize_start")}
             >
               Connect Spotify
             </Button>
