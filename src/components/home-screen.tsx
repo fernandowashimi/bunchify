@@ -325,8 +325,6 @@ export function HomeScreen() {
       previewRequest?.range,
       debouncedPrimary,
       debouncedSecondary,
-      previewItems?.profile.displayName,
-      storyImage(previewItems?.profile.images),
       previewItems?.items.map((item) => `${item.name}\0${item.artist ?? ""}\0${storyImage(item.images) ?? ""}`).join("\n"),
     ],
     enabled: previewItems !== null,
@@ -339,11 +337,9 @@ export function HomeScreen() {
       return renderStoryPreview({
         kind: previewRequest.type === "artists" ? "ARTISTS" : "TRACKS",
         rangePhrase: RANGE_PHRASE[previewRequest.range],
-        displayName: previewItems.profile.displayName,
         primary: look.primary,
         secondary: look.secondary,
         rows: storyRows(previewRequest.type, previewItems.items),
-        avatar: storyImage(previewItems.profile.images),
       }).then((svg) => ({
         svg,
         type: previewRequest.type,

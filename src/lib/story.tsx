@@ -17,26 +17,26 @@ export const STORY_HEIGHT = 1920;
 
 const SAFE_TOP = 269;
 const SAFE_BOTTOM = 384;
-const SAFE_SIDE = 65;
+const SAFE_SIDE = 56;
 const INNER_HEIGHT = STORY_HEIGHT - SAFE_TOP - SAFE_BOTTOM;
 const CONTENT_WIDTH = STORY_WIDTH - SAFE_SIDE * 2;
 
-const HEADER_HEIGHT = 84;
+const HEADER_HEIGHT = 76;
 const SPOTIFY_LOGO_WIDTH = 204;
 const SPOTIFY_LOGO_HEIGHT = 56;
-const GAP_AFTER_NAME = 36;
-const TITLE_HEIGHT = 200;
-const GAP_AFTER_TITLE = 40;
-const ROW_SLOT = 164;
-const ROW_CARD = 148;
-const COVER = 108;
-const RANK_WIDTH = 168;
-const CARD_PAD_X = 18;
-const RANK_INSET = 18;
-const TEXT_GAP = 16;
+const GAP_AFTER_HEADER = 20;
+const TITLE_HEIGHT = 176;
+const GAP_AFTER_TITLE = 24;
+const ROW_SLOT = 186;
+const ROW_CARD = 170;
+const COVER = 128;
+const RANK_WIDTH = 156;
+const CARD_PAD_X = 22;
+const RANK_INSET = 14;
+const TEXT_GAP = 22;
 const TEXT_WIDTH = CONTENT_WIDTH - CARD_PAD_X * 2 - RANK_INSET - COVER - TEXT_GAP - RANK_WIDTH;
 const FOOTER_HEIGHT =
-  INNER_HEIGHT - HEADER_HEIGHT - GAP_AFTER_NAME - TITLE_HEIGHT - GAP_AFTER_TITLE - ROW_SLOT * 5;
+  INNER_HEIGHT - HEADER_HEIGHT - GAP_AFTER_HEADER - TITLE_HEIGHT - GAP_AFTER_TITLE - ROW_SLOT * 5;
 
 const GRADIENT = "linear-gradient(180deg, #0E1E38 0%, #141C3A 34%, #2A2150 58%, #5A2870 80%, #7F2D79 100%)";
 
@@ -72,23 +72,19 @@ function clip(width: number, fontSize: number, color: string) {
 export function StoryImage({
   kind,
   rangePhrase,
-  displayName,
   primary,
   secondary,
   rows,
   spotifyLogo,
-  avatar,
 }: {
   kind: "ARTISTS" | "TRACKS";
   rangePhrase: string;
-  displayName: string;
   primary: string;
   secondary: string;
   rows: StoryRow[];
   spotifyLogo: string;
-  avatar: string | null;
 }) {
-  const kindSize = kind.length > 6 ? 100 : 118;
+  const kindSize = kind.length > 6 ? 96 : 112;
 
   return (
     <div
@@ -120,35 +116,12 @@ export function StoryImage({
             height: HEADER_HEIGHT,
             flexShrink: 0,
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {avatar ? (
-              <img
-                src={avatar}
-                width={68}
-                height={68}
-                alt=""
-                style={{ borderRadius: 34, objectFit: "cover", marginRight: 16 }}
-              />
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  width: 68,
-                  height: 68,
-                  borderRadius: 34,
-                  marginRight: 16,
-                  background: "rgba(255,255,255,0.16)",
-                }}
-              />
-            )}
-            <div style={clip(CONTENT_WIDTH - 68 - 16 - SPOTIFY_LOGO_WIDTH - 32, 34, "#ffffff")}>{displayName}</div>
-          </div>
           <img src={spotifyLogo} width={SPOTIFY_LOGO_WIDTH} height={SPOTIFY_LOGO_HEIGHT} alt="" />
         </div>
-        <div style={{ display: "flex", height: GAP_AFTER_NAME, flexShrink: 0 }} />
+        <div style={{ display: "flex", height: GAP_AFTER_HEADER, flexShrink: 0 }} />
         <div
           style={{
             display: "flex",
@@ -163,8 +136,8 @@ export function StoryImage({
             style={{
               display: "flex",
               color: primary,
-              fontSize: 34,
-              lineHeight: "34px",
+              fontSize: 32,
+              lineHeight: "32px",
               letterSpacing: 5,
               textTransform: "uppercase",
             }}
@@ -179,7 +152,7 @@ export function StoryImage({
               fontSize: kindSize,
               fontWeight: 800,
               lineHeight: `${kindSize}px`,
-              marginTop: 6,
+              marginTop: 4,
             }}
           >
             {kind}
@@ -188,8 +161,8 @@ export function StoryImage({
             style={{
               display: "flex",
               color: primary,
-              fontSize: 26,
-              lineHeight: "26px",
+              fontSize: 24,
+              lineHeight: "24px",
               letterSpacing: 3,
               textTransform: "uppercase",
               marginTop: 8,
@@ -214,7 +187,7 @@ export function StoryImage({
                   boxSizing: "border-box",
                   background: "rgba(255,255,255,0.08)",
                   border: "1px solid rgba(255,255,255,0.18)",
-                  borderRadius: 22,
+                  borderRadius: 24,
                   paddingLeft: CARD_PAD_X,
                   paddingRight: CARD_PAD_X + RANK_INSET,
                 }}
@@ -225,7 +198,7 @@ export function StoryImage({
                     width={COVER}
                     height={COVER}
                     alt=""
-                    style={{ borderRadius: 16, objectFit: "cover", marginRight: TEXT_GAP }}
+                    style={{ borderRadius: 18, objectFit: "cover", marginRight: TEXT_GAP }}
                   />
                 ) : (
                   <div
@@ -233,16 +206,16 @@ export function StoryImage({
                       display: "flex",
                       width: COVER,
                       height: COVER,
-                      borderRadius: 16,
+                      borderRadius: 18,
                       marginRight: TEXT_GAP,
                       background: "rgba(255,255,255,0.12)",
                     }}
                   />
                 )}
                 <div style={{ display: "flex", flexDirection: "column", width: TEXT_WIDTH }}>
-                  <div style={clip(TEXT_WIDTH, 32, "#ffffff")}>{row.name}</div>
+                  <div style={clip(TEXT_WIDTH, 38, "#ffffff")}>{row.name}</div>
                   {row.artist ? (
-                    <div style={{ ...clip(TEXT_WIDTH, 24, primary), marginTop: 6 }}>{row.artist}</div>
+                    <div style={{ ...clip(TEXT_WIDTH, 28, primary), marginTop: 8 }}>{row.artist}</div>
                   ) : null}
                 </div>
                 <div
@@ -254,8 +227,8 @@ export function StoryImage({
                     fontFamily: "Instrument Serif",
                     fontStyle: "italic",
                     fontWeight: 400,
-                    fontSize: 80,
-                    lineHeight: "80px",
+                    fontSize: 92,
+                    lineHeight: "92px",
                   }}
                 >
                   {row.rank}

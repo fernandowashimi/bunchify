@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { HEX_COLOR, INSUFFICIENT_TOP, RANGE_PHRASE } from "@/lib/story-copy";
 import { storyFontOptions, storyFonts } from "@/lib/story-fonts";
-import { STORY_HEIGHT, STORY_WIDTH, StoryImage, storyImage, storyRows } from "@/lib/story";
-import { getProfile, getTop, isTopRange, isTopType, SpotifyError } from "@/lib/spotify";
+import { STORY_HEIGHT, STORY_WIDTH, StoryImage, storyRows } from "@/lib/story";
+import { getTop, isTopRange, isTopType, SpotifyError } from "@/lib/spotify";
 
 export const runtime = "nodejs";
 
@@ -15,12 +15,10 @@ function dataUrl(bytes: Buffer, mime: string) {
 async function renderStory(input: {
   kind: "ARTISTS" | "TRACKS";
   rangePhrase: string;
-  displayName: string;
   primary: string;
   secondary: string;
   rows: ReturnType<typeof storyRows>;
   spotifyLogo: string;
-  avatar: string | null;
   syne: ArrayBuffer;
   dmSans: ArrayBuffer;
   numbers: ArrayBuffer;
@@ -29,12 +27,10 @@ async function renderStory(input: {
     <StoryImage
       kind={input.kind}
       rangePhrase={input.rangePhrase}
-      displayName={input.displayName}
       primary={input.primary}
       secondary={input.secondary}
       rows={input.rows}
       spotifyLogo={input.spotifyLogo}
-      avatar={input.avatar}
     />,
     {
       width: STORY_WIDTH,
@@ -62,7 +58,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [profile, items] = await Promise.all([getProfile(), getTop(type, range)]);
+    const items = await getTop(type, range);
     if (items.length < 5) {
       return Response.json({ error: INSUFFICIENT_TOP }, { status: 422 });
     }
@@ -75,12 +71,10 @@ export async function GET(request: Request) {
     const body = await renderStory({
       kind: type === "artists" ? "ARTISTS" : "TRACKS",
       rangePhrase: RANGE_PHRASE[range],
-      displayName: profile.displayName,
       primary,
       secondary,
       rows: storyRows(type, items),
       spotifyLogo: dataUrl(spotifyLogo, "image/png"),
-      avatar: storyImage(profile.images),
       syne,
       dmSans,
       numbers,

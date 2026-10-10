@@ -81,24 +81,21 @@ async function embedAll(urls: Array<string | null>) {
 export async function renderStoryPreview(input: {
   kind: "ARTISTS" | "TRACKS";
   rangePhrase: string;
-  displayName: string;
   primary: string;
   secondary: string;
   rows: ReturnType<typeof storyRows>;
-  avatar: string | null;
 }) {
   const [{ default: satori }, fonts, logo, embedded] = await Promise.all([
     import("satori"),
     loadPreviewFonts(),
     loadLogo(),
-    embedAll([input.avatar, ...input.rows.map((row) => row.image)]),
+    embedAll(input.rows.map((row) => row.image)),
   ]);
 
   return satori(
     <StoryImage
       kind={input.kind}
       rangePhrase={input.rangePhrase}
-      displayName={input.displayName}
       primary={input.primary}
       secondary={input.secondary}
       rows={input.rows.map((row) => ({
@@ -106,7 +103,6 @@ export async function renderStoryPreview(input: {
         image: row.image ? (embedded.get(row.image) ?? null) : null,
       }))}
       spotifyLogo={logo}
-      avatar={input.avatar ? (embedded.get(input.avatar) ?? null) : null}
     />,
     {
       width: STORY_WIDTH,
