@@ -13,3 +13,6 @@ export const RANGE_HELP = {
 export const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 
 export const INSUFFICIENT_TOP = "You don't have enough data to proceed.";
+
+export const PREVIEW_EMPTY =
+  "Your story will show up here.\nPick your top and choose a time range to start.";

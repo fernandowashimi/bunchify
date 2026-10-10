@@ -1,25 +1,88 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { MusicIcon, OctagonXIcon, UserIcon } from "lucide-react";
+import {
+  DownloadIcon,
+  Loader2Icon,
+  MusicIcon,
+  OctagonXIcon,
+  ShareIcon,
+  SparklesIcon,
+  UserIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Atmosphere } from "@/components/atmosphere";
 import { StoryFrame } from "@/components/story-frame";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldSet, FieldTitle } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { renderStoryPreview } from "@/lib/render-story-preview";
-import { INSUFFICIENT_TOP, RANGE_HELP, RANGE_PHRASE } from "@/lib/story-copy";
+import { INSUFFICIENT_TOP, PREVIEW_EMPTY, RANGE_HELP, RANGE_PHRASE } from "@/lib/story-copy";
 import { storyImage, storyRows } from "@/lib/story";
 import type { ListenerProfile, TopItem, TopRange, TopType } from "@/lib/spotify";
 
 const DEFAULT_PRIMARY = "#EE1F9D";
 const DEFAULT_SECONDARY = "#DBFA84";
 const COLOR_DELAY = 150;
+const STORY_FILENAME = "bunchify_image.png";
+const DESKTOP_MIN = 900;
+// Handle + header chrome only. Pixel value avoids root font-size drift from rem.
+const MOBILE_SNAP_PEEK = "88px";
+const MOBILE_SNAP_EXPANDED = 0.92;
+const MOBILE_SNAP_POINTS = [MOBILE_SNAP_PEEK, MOBILE_SNAP_EXPANDED] as const;
+type MobileSnapPoint = (typeof MOBILE_SNAP_POINTS)[number];
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia(`(max-width: ${DESKTOP_MIN - 1}px)`);
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+}
+
+function useLockMobileBodyScroll(locked: boolean) {
+  useEffect(() => {
+    if (!locked) return;
+    const html = document.documentElement;
+    const { body } = document;
+    const previousHtml = html.style.overflow;
+    const previousBody = body.style.overflow;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = previousHtml;
+      body.style.overflow = previousBody;
+    };
+  }, [locked]);
+}
+
+function downloadStory(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = STORY_FILENAME;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
+
+function shareCancelled(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
+}
 
 type TopResponse = { items: TopItem[] };
 type PreviewRequest = { attempt: number; type: TopType; range: TopRange };
@@ -29,7 +92,13 @@ type PreviewStory = {
   range: TopRange;
   primary: string;
   secondary: string;
+  sticker: string | null;
 };
+
+function storySticker(item: TopItem | undefined) {
+  if (!item) return null;
+  return item.artist ? `${item.artist} · ${item.name}` : item.name;
+}
 
 async function readJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -49,10 +118,162 @@ function useDebounced<T>(value: T, delay: number) {
 
 function StoryPreviewStatus({ tone, children }: { tone: "waiting" | "failed"; children: string }) {
   return (
-    <p className="flex size-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-muted-foreground">
+    <p className="flex size-full flex-col items-center justify-center gap-3 whitespace-pre-line px-6 text-center text-sm text-muted-foreground">
       {tone === "failed" ? <OctagonXIcon className="size-5 text-destructive" aria-hidden="true" /> : null}
       {children}
     </p>
+  );
+}
+
+type StoryControlsProps = {
+  type: TopType | null;
+  range: TopRange | null;
+  primary: string;
+  secondary: string;
+  readyToGenerate: boolean;
+  showSkeleton: boolean;
+  loadingTop: boolean;
+  storyActionReady: boolean;
+  onTypeChange: (type: TopType | null) => void;
+  onRangeChange: (range: TopRange | null) => void;
+  onPrimaryChange: (primary: string) => void;
+  onSecondaryChange: (secondary: string) => void;
+  onGenerate: () => void;
+  onShare: () => void;
+  onSave: () => void;
+};
+
+function StoryControls({
+  type,
+  range,
+  primary,
+  secondary,
+  readyToGenerate,
+  showSkeleton,
+  loadingTop,
+  storyActionReady,
+  onTypeChange,
+  onRangeChange,
+  onPrimaryChange,
+  onSecondaryChange,
+  onGenerate,
+  onShare,
+  onSave,
+}: StoryControlsProps) {
+  const id = useId();
+  const rangeLabelId = `${id}-range`;
+  const primaryId = `${id}-primary`;
+  const secondaryId = `${id}-secondary`;
+
+  return (
+    <FieldSet>
+      <FieldGroup>
+        <Field>
+          <FieldLabel>Type</FieldLabel>
+          <ToggleGroup
+            variant="segment"
+            spacing={1}
+            value={type ? [type] : []}
+            onValueChange={(groupValue) => {
+              const next = groupValue[0];
+              if (next === "artists" || next === "tracks") onTypeChange(next);
+              else onTypeChange(null);
+            }}
+          >
+            <ToggleGroupItem value="artists">
+              <UserIcon data-icon="inline-start" />
+              Top artists
+            </ToggleGroupItem>
+            <ToggleGroupItem value="tracks">
+              <MusicIcon data-icon="inline-start" />
+              Top tracks
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </Field>
+        <Field>
+          <FieldLabel id={rangeLabelId}>Range</FieldLabel>
+          <RadioGroup
+            aria-labelledby={rangeLabelId}
+            value={range ?? ""}
+            onValueChange={(next) => {
+              if (next === "short_term" || next === "medium_term" || next === "long_term") {
+                onRangeChange(next);
+              }
+            }}
+          >
+            <FieldLabel>
+              <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
+                <RadioGroupItem value="short_term" />
+                <FieldContent>
+                  <FieldTitle>Short term</FieldTitle>
+                  <FieldDescription>{RANGE_HELP.short_term}</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+            <FieldLabel>
+              <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
+                <RadioGroupItem value="medium_term" />
+                <FieldContent>
+                  <FieldTitle>Medium term</FieldTitle>
+                  <FieldDescription>{RANGE_HELP.medium_term}</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+            <FieldLabel>
+              <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
+                <RadioGroupItem value="long_term" />
+                <FieldContent>
+                  <FieldTitle>Long term</FieldTitle>
+                  <FieldDescription>{RANGE_HELP.long_term}</FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+          </RadioGroup>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={primaryId}>Primary</FieldLabel>
+          <input
+            id={primaryId}
+            type="color"
+            value={primary}
+            onChange={(event) => onPrimaryChange(event.target.value)}
+            className="h-10 w-full cursor-pointer rounded-md border bg-transparent"
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={secondaryId}>Secondary</FieldLabel>
+          <input
+            id={secondaryId}
+            type="color"
+            value={secondary}
+            onChange={(event) => onSecondaryChange(event.target.value)}
+            className="h-10 w-full cursor-pointer rounded-md border bg-transparent"
+          />
+          <FieldDescription>Darker colors can be hard to read.</FieldDescription>
+        </Field>
+        <div className="flex flex-col gap-2">
+          <Button onClick={onGenerate} disabled={!readyToGenerate || showSkeleton || loadingTop}>
+            {showSkeleton ? (
+              <Loader2Icon data-icon="inline-start" className="animate-spin" />
+            ) : (
+              <SparklesIcon data-icon="inline-start" />
+            )}
+            {showSkeleton ? "Making your story…" : "Generate"}
+          </Button>
+          <Button variant="outline" onClick={onShare} disabled={!storyActionReady}>
+            <ShareIcon data-icon="inline-start" />
+            Share
+          </Button>
+          <Button variant="outline" onClick={onSave} disabled={!storyActionReady}>
+            <DownloadIcon data-icon="inline-start" />
+            Save image
+          </Button>
+          <Button variant="ghost" render={<a href="/api/auth/logout" />} nativeButton={false}>
+            Log out
+          </Button>
+        </div>
+      </FieldGroup>
+    </FieldSet>
   );
 }
 
@@ -63,6 +284,9 @@ export function HomeScreen() {
   const [primary, setPrimary] = useState(DEFAULT_PRIMARY);
   const [secondary, setSecondary] = useState(DEFAULT_SECONDARY);
   const [preview, setPreview] = useState<PreviewRequest | null>(null);
+  const [snapPoint, setSnapPoint] = useState<MobileSnapPoint>(MOBILE_SNAP_PEEK);
+  const isMobile = useIsMobile();
+  useLockMobileBodyScroll(isMobile);
   const warned = useRef<string | null>(null);
   const making = useRef<string | null>(null);
   const debouncedPrimary = useDebounced(primary, COLOR_DELAY);
@@ -126,6 +350,7 @@ export function HomeScreen() {
         range: previewRequest.range,
         primary: look.primary,
         secondary: look.secondary,
+        sticker: storySticker(previewItems.items[0]),
       }));
     },
   });
@@ -185,11 +410,12 @@ export function HomeScreen() {
       return;
     }
     setPreview({ attempt: Date.now(), type, range });
+    setSnapPoint(MOBILE_SNAP_PEEK);
   }
 
-  async function save() {
+  async function storyPng() {
     const ready: PreviewStory | undefined = story.data;
-    if (!ready || story.isFetching || story.isPlaceholderData) return;
+    if (!ready || story.isFetching || story.isPlaceholderData) return null;
     const params = new URLSearchParams({
       type: ready.type,
       range: ready.range,
@@ -199,23 +425,41 @@ export function HomeScreen() {
     const response = await fetch(`/api/story?${params}`);
     if (response.status === 401) {
       router.push("/authorize");
-      return;
+      return null;
     }
     if (!response.ok) {
       toast.add({ title: "Could not make your story.", type: "error" });
-      return;
+      return null;
     }
-    const url = URL.createObjectURL(await response.blob());
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "bunchify_image.png";
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1_000);
-    toast.add({ title: "Saved bunchify_image.png", type: "success" });
+    return response.blob();
+  }
+
+  async function save() {
+    const blob = await storyPng();
+    if (!blob) return;
+    downloadStory(blob);
+    toast.add({ title: `Saved ${STORY_FILENAME}`, type: "success" });
+  }
+
+  async function share() {
+    const blob = await storyPng();
+    if (!blob) return;
+    const file = new File([blob], STORY_FILENAME, { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Bunchify" });
+        return;
+      } catch (error) {
+        if (shareCancelled(error)) return;
+      }
+    }
+    downloadStory(blob);
+    toast.add({ title: `Saved ${STORY_FILENAME}`, type: "success" });
   }
 
   const loadingTop = top.isFetching;
   const readyToGenerate = Boolean(type && range);
+  const storyActionReady = Boolean(story.data) && !story.isFetching && !story.isPlaceholderData && !insufficientTop;
   const showSvg = Boolean(story.data) && !showSkeleton && !insufficientTop && !previewFailed && !top.isError;
   const previewStatus: { tone: "waiting" | "failed"; text: string } = insufficientTop
     ? { tone: "failed", text: INSUFFICIENT_TOP }
@@ -223,131 +467,85 @@ export function HomeScreen() {
       ? { tone: "failed", text: "Could not make your story." }
       : top.isError
         ? { tone: "failed", text: "Could not load your top." }
-        : { tone: "waiting", text: "Generate a story to preview it." };
+        : { tone: "waiting", text: PREVIEW_EMPTY };
+
+  const controlProps: StoryControlsProps = {
+    type,
+    range,
+    primary,
+    secondary,
+    readyToGenerate,
+    showSkeleton,
+    loadingTop,
+    storyActionReady,
+    onTypeChange: setType,
+    onRangeChange: setRange,
+    onPrimaryChange: setPrimary,
+    onSecondaryChange: setSecondary,
+    onGenerate: generate,
+    onShare: share,
+    onSave: save,
+  };
 
   return (
     <Atmosphere>
-      <main className="mx-auto flex min-h-svh w-full max-w-5xl flex-col items-center gap-6 px-5 py-8 min-[900px]:flex-row min-[900px]:justify-center">
-        <div className="flex w-full max-w-[320px] justify-center">
+      <main className="mx-auto flex h-svh w-full max-w-5xl flex-col items-center overflow-hidden px-5 pt-6 pb-[88px] min-[900px]:h-auto min-[900px]:min-h-svh min-[900px]:flex-row min-[900px]:items-center min-[900px]:justify-center min-[900px]:gap-6 min-[900px]:overflow-visible min-[900px]:py-8 min-[900px]:pb-8">
+        <div className="flex min-h-0 w-full max-w-[400px] flex-1 items-center justify-center min-[900px]:flex-none">
           <div
             role="region"
             aria-label="Story preview"
             aria-busy={showSkeleton}
-            className="aspect-[9/16] w-full overflow-hidden rounded-[18px] bg-black/40"
+            className="aspect-[9/16] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[18px] bg-black/40 min-[900px]:h-auto min-[900px]:w-full"
           >
             {showSkeleton ? (
               <Skeleton className="size-full rounded-[18px]" />
             ) : showSvg && story.data ? (
-              <StoryFrame svg={story.data.svg} />
+              <StoryFrame
+                svg={story.data.svg}
+                displayName={profile.data?.displayName ?? ""}
+                avatarUrl={storyImage(profile.data?.images)}
+                sticker={story.data.sticker}
+              />
             ) : (
               <StoryPreviewStatus tone={previewStatus.tone}>{previewStatus.text}</StoryPreviewStatus>
             )}
           </div>
         </div>
-        <aside className="w-full max-w-[420px] rounded-[20px] border bg-card p-4 min-[900px]:max-w-[280px]">
-          <FieldSet>
-            <FieldGroup>
-              <Field>
-                <FieldLabel>Type</FieldLabel>
-                <ToggleGroup
-                  variant="segment"
-                  spacing={1}
-                  value={type ? [type] : []}
-                  onValueChange={(groupValue) => {
-                    const next = groupValue[0];
-                    if (next === "artists" || next === "tracks") setType(next);
-                    else setType(null);
-                  }}
-                >
-                  <ToggleGroupItem value="artists">
-                    <UserIcon data-icon="inline-start" />
-                    Top artists
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="tracks">
-                    <MusicIcon data-icon="inline-start" />
-                    Top tracks
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </Field>
-              <Field>
-                <FieldLabel id="range-label">Range</FieldLabel>
-                <RadioGroup
-                  aria-labelledby="range-label"
-                  value={range ?? ""}
-                  onValueChange={(next) => {
-                    if (next === "short_term" || next === "medium_term" || next === "long_term") {
-                      setRange(next);
-                    }
-                  }}
-                >
-                  <FieldLabel>
-                    <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
-                      <RadioGroupItem value="short_term" />
-                      <FieldContent>
-                        <FieldTitle>Short term</FieldTitle>
-                        <FieldDescription>{RANGE_HELP.short_term}</FieldDescription>
-                      </FieldContent>
-                    </Field>
-                  </FieldLabel>
-                  <FieldLabel>
-                    <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
-                      <RadioGroupItem value="medium_term" />
-                      <FieldContent>
-                        <FieldTitle>Medium term</FieldTitle>
-                        <FieldDescription>{RANGE_HELP.medium_term}</FieldDescription>
-                      </FieldContent>
-                    </Field>
-                  </FieldLabel>
-                  <FieldLabel>
-                    <Field orientation="horizontal" className="items-center has-[>[data-slot=field-content]]:items-center">
-                      <RadioGroupItem value="long_term" />
-                      <FieldContent>
-                        <FieldTitle>Long term</FieldTitle>
-                        <FieldDescription>{RANGE_HELP.long_term}</FieldDescription>
-                      </FieldContent>
-                    </Field>
-                  </FieldLabel>
-                </RadioGroup>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="primary">Primary</FieldLabel>
-                <input
-                  id="primary"
-                  type="color"
-                  value={primary}
-                  onChange={(event) => setPrimary(event.target.value)}
-                  className="h-10 w-full cursor-pointer rounded-md border bg-transparent"
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="secondary">Secondary</FieldLabel>
-                <input
-                  id="secondary"
-                  type="color"
-                  value={secondary}
-                  onChange={(event) => setSecondary(event.target.value)}
-                  className="h-10 w-full cursor-pointer rounded-md border bg-transparent"
-                />
-                <FieldDescription>Darker colors can be hard to read.</FieldDescription>
-              </Field>
-              <div className="flex flex-col gap-2">
-                <Button onClick={generate} disabled={!readyToGenerate || showSkeleton || loadingTop}>
-                  {showSkeleton ? "Making your story…" : "Generate"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={save}
-                  disabled={!story.data || story.isFetching || story.isPlaceholderData || insufficientTop}
-                >
-                  Save image
-                </Button>
-                <Button variant="ghost" render={<a href="/api/auth/logout" />} nativeButton={false}>
-                  Log out
-                </Button>
-              </div>
-            </FieldGroup>
-          </FieldSet>
+        <aside className="hidden w-full max-w-[280px] rounded-[20px] border bg-card p-4 min-[900px]:block">
+          <div className="flex flex-col gap-0.5 pb-4">
+            <h2 className="font-heading text-base font-medium text-foreground">Customize</h2>
+            <p className="text-sm text-balance text-muted-foreground">Pick your top, range, and colors.</p>
+          </div>
+          <StoryControls {...controlProps} />
         </aside>
+        {isMobile ? (
+          <Drawer
+            open
+            onOpenChange={(next) => {
+              if (!next) setSnapPoint(MOBILE_SNAP_PEEK);
+            }}
+            modal={false}
+            disablePointerDismissal
+            showSwipeHandle
+            snapPoints={[...MOBILE_SNAP_POINTS]}
+            snapPoint={snapPoint}
+            onSnapPointChange={(next) => {
+              if (next === MOBILE_SNAP_PEEK || next === MOBILE_SNAP_EXPANDED) {
+                setSnapPoint(next);
+              }
+            }}
+          >
+            <DrawerContent initialFocus={false}>
+              <DrawerHeader className="pb-3">
+                <DrawerTitle>Customize</DrawerTitle>
+                <DrawerDescription>Pick your top, range, and colors.</DrawerDescription>
+              </DrawerHeader>
+              <div className="flex-1 overflow-y-auto p-4 pt-0">
+                <StoryControls {...controlProps} />
+              </div>
+            </DrawerContent>
+          </Drawer>
+        ) : null}
       </main>
     </Atmosphere>
   );

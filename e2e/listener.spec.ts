@@ -50,10 +50,12 @@ test("a stubbed Spotify callback opens Home without exposing the access token", 
   await expect(page.getByLabel("Primary")).toHaveValue("#ee1f9d");
   await expect(page.getByLabel("Secondary")).toHaveValue("#dbfa84");
   await expect(page.getByRole("button", { name: "Generate" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Share" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Save image" })).toBeDisabled();
   await expect(page.getByRole("img", { name: "Story preview" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Story preview" }).locator("[data-slot=skeleton]")).toHaveCount(0);
-  await expect(page.getByText("Generate a story to preview it.")).toBeVisible();
+  await expect(page.getByText("Your story will show up here.")).toBeVisible();
+  await expect(page.getByText("Pick your top and choose a time range to start.")).toBeVisible();
   await page.waitForTimeout(1_000);
   expect((await spotifyReads(page)).filter((entry) => entry.includes("/v1/me"))).toEqual([]);
 
@@ -83,7 +85,8 @@ test("the preview skeleton shows only while a story is generating", async ({ pag
   await page.getByRole("button", { name: "Top artists" }).click();
   await page.getByRole("radio", { name: "Short term" }).click();
   await expect(preview.locator("[data-slot=skeleton]")).toHaveCount(0);
-  await expect(preview.getByText("Generate a story to preview it.")).toBeVisible();
+  await expect(preview.getByText("Your story will show up here.")).toBeVisible();
+  await expect(preview.getByText("Pick your top and choose a time range to start.")).toBeVisible();
   await expect(page.getByText("Loading your tops…")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Generate" })).toBeEnabled();
   await expect(preview.locator("[data-slot=skeleton]")).toHaveCount(0);
@@ -153,6 +156,7 @@ test("a top with fewer than five items shows the failure and does not download",
   await expect(page.locator("[data-slot=toast]")).toContainText("You don't have enough data to proceed.");
   await expect(preview.getByText("You don't have enough data to proceed.")).toBeVisible();
   await expect(preview.locator("[data-slot=skeleton]")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Share" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Save image" })).toBeDisabled();
   await expect(page.getByRole("img", { name: "Story preview" })).toHaveCount(0);
 });
@@ -175,7 +179,26 @@ test("a failed story shows a status in the preview instead of a skeleton", async
   await expect(preview.getByText("Could not make your story.")).toBeVisible({ timeout: 30_000 });
   await expect(preview.locator("[data-slot=skeleton]")).toHaveCount(0);
   await expect(preview.getByRole("img", { name: "Story preview" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Share" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Save image" })).toBeDisabled();
+});
+
+test("share falls back to downloading the story PNG", async ({ page }) => {
+  await connect(page);
+  await generateStory(page);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "canShare", {
+      configurable: true,
+      value: () => false,
+    });
+  });
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Share" }).click(),
+  ]);
+
+  expect(download.suggestedFilename()).toBe("bunchify_image.png");
+  await expect(page.getByText("Saved bunchify_image.png")).toBeVisible();
 });
 
 test("logout returns the listener to Authorize", async ({ page }) => {
